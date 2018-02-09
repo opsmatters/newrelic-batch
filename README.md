@@ -59,7 +59,7 @@ Add the following dependency to include the artefact within your project:
 ## Built With
 
 * [newrelic-api](https://github.com/opsmatters/newrelic-api) - Java client library for the New Relic Monitoring and Alerting REST APIs
-* [opsmatters-core](https://github.com/opsmatters/opsmatters-core) - Core library for the opsmatters suite
+* [SnakeYAML](https://bitbucket.org/asomov/snakeyaml) - A YAML processor for the Java Virtual Machine
 * [Maven](https://maven.apache.org/) - Dependency Management
 * [JUnit](http://junit.org/) - Unit testing framework
 
