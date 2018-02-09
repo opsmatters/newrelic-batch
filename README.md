@@ -1,6 +1,6 @@
 ![opsmatters](https://i.imgur.com/VoLABc1.png)
 
-# New Relic API 
+# New Relic Batch Dashboards 
 [![Build Status](https://travis-ci.org/opsmatters/newrelic-batch-dashboards.svg?branch=master)](https://travis-ci.org/opsmatters/newrelic-batch-dashboards)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch-dashboards/badge.svg?style=blue)](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch-dashboards)
 [![Javadocs](http://javadoc.io/badge/com.opsmatters/newrelic-batch-dashboards.svg)](http://javadoc.io/doc/com.opsmatters/newrelic-batch-dashboards)
@@ -59,7 +59,7 @@ Add the following dependency to include the artefact within your project:
 ## Built With
 
 * [newrelic-api](https://github.com/opsmatters/newrelic-api) - Java client library for the New Relic Monitoring and Alerting REST APIs
-* [SnakeYAML](https://bitbucket.org/asomov/snakeyaml) - A YAML processor for the Java Virtual Machine
+* [opsmatters-core](https://github.com/opsmatters/opsmatters-core) - Core library for the opsmatters suite
 * [Maven](https://maven.apache.org/) - Dependency Management
 * [JUnit](http://junit.org/) - Unit testing framework
 
