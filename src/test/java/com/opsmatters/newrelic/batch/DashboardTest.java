@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package com.opsmatters.newrelic.dashboards;
+package com.opsmatters.newrelic.batch;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 import org.junit.Test;
 import junit.framework.Assert;
 import com.opsmatters.newrelic.api.Constants;
+import com.opsmatters.newrelic.batch.TextFile;
+import com.opsmatters.newrelic.batch.parsers.DashboardParser;
+import com.opsmatters.newrelic.batch.model.Dashboards;
 
 /**
- * The set of tests used for YAML dashboards.
+ * The set of tests used for importing and exporting dashboards.
  * 
  * @author Gerald Curley (opsmatters)
  */
@@ -44,6 +47,7 @@ public class DashboardTest
 
         // Load the test dashboards file
         logger.info("Loading dashboards file: "+FILENAME);
+/* GERALD
         DashboardConfiguration config = new DashboardConfiguration();
 
         try
@@ -54,8 +58,22 @@ public class DashboardTest
         {
             logger.severe("Error loading dashboards file: "+e.getClass().getName()+": "+e.getMessage());
         }
+*/
+        TextFile file = new TextFile(FILENAME);
+        Dashboards dashboards = new Dashboards();
+        try
+        {
+            if(file.read())
+                DashboardParser.parseYaml(file.getContents(), dashboards);
+        }
+        catch(IOException e)
+        {
+            logger.severe("Error loading dashboards file: "+e.getClass().getName()+": "+e.getMessage());
+        }
 
-        Assert.assertTrue(config.getDashboards().size() > 0);
+//GERALD
+System.out.println("DashboardTest:1: dashboards="+dashboards.getDashboards());
+        Assert.assertTrue(dashboards.getDashboards().size() > 0);
 
 //GERALD: delete the dashboards before creating them again
 

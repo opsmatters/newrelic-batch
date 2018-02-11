@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.opsmatters.newrelic.dashboards;
+package com.opsmatters.newrelic.batch.parsers;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -40,6 +40,8 @@ import com.opsmatters.newrelic.api.model.insights.widgets.Threshold;
 import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLight;
 import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLightState;
 import com.opsmatters.newrelic.api.model.metrics.Metric;
+//GERALD
+import com.opsmatters.newrelic.batch.model.Dashboards;
 
 /**
  * Dashboards parser that converts to/from YAML format.
@@ -48,7 +50,7 @@ import com.opsmatters.newrelic.api.model.metrics.Metric;
  */
 public class DashboardParser
 {
-    private static final Logger logger = Logger.getLogger(DashboardConfiguration.class.getName());
+    private static final Logger logger = Logger.getLogger(DashboardParser.class.getName());
 
     /**
      * Private constructor.
@@ -58,8 +60,19 @@ public class DashboardParser
     }
 
     /**
-     * Reads the dashboards configuration from the given map.
+     * Replaces the dashboards in the given configuration with those read from the given YAML string.
      * @param contents The contents of the YAML file as a string
+     * @param dashboards The dashboard configuration
+     */
+    public static void parseYaml(String contents, Dashboards dashboards)
+    {
+        dashboards.getDashboards().clear();
+        dashboards.getDashboards().addAll(fromYaml(contents));
+    }
+
+    /**
+     * Reads the dashboards configuration from the given string.
+     * @param contents The contents of the file as a string
      * @return The dashboards read from the YAML string
      */
     public static List<Dashboard> fromYaml(String contents)
