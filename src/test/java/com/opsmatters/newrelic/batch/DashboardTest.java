@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import org.junit.Test;
 import junit.framework.Assert;
+import com.opsmatters.core.util.TextFile;
 import com.opsmatters.newrelic.api.Constants;
-import com.opsmatters.newrelic.batch.TextFile;
 import com.opsmatters.newrelic.batch.parsers.DashboardParser;
 import com.opsmatters.newrelic.batch.model.Dashboards;
 

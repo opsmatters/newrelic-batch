@@ -6,8 +6,10 @@
   <packaging>jar</packaging>
   <name>New Relic Batch</name>
   <description>
-    Java library that allows New Relic Insights dashboards to be created from a definition in a YAML file.
-    It provides a set of tools to simplify or automate the configuration of New Relic Insights dashboards.
+    Java library that allows New Relic objects to be created automatically from file based definitions.
+    New Relic Insights dashboards can be created from definition files in YAML format.
+    New Relic Alerts can be configured from alert policy definitions in CSV or spreadsheet format.
+    It provides a set of tools to accelerate or automate the deployment of New Relic Alerts and Insights dashboards.
   </description>
   <url>https://github.com/opsmatters/newrelic-batch</url>
 

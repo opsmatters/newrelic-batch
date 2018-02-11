@@ -5,8 +5,10 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch/badge.svg?style=blue)](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch)
 [![Javadocs](http://javadoc.io/badge/com.opsmatters/newrelic-batch.svg)](http://javadoc.io/doc/com.opsmatters/newrelic-batch)
 
-Java library that allows New Relic Insights dashboards to be created from a definition in a YAML file.
-It provides a set of tools to simplify or automate the configuration of New Relic Insights dashboards.
+Java library that allows New Relic objects to be created automatically from file based definitions.
+New Relic Insights dashboards can be created from definition files in YAML format.
+New Relic Alerts can be configured from alert policy definitions in CSV or spreadsheet format.
+It provides a set of tools to accelerate or automate the deployment of New Relic Alerts and Insights dashboards.
 
 ## Examples
 
@@ -59,6 +61,7 @@ Add the following dependency to include the artefact within your project:
 ## Built With
 
 * [newrelic-api](https://github.com/opsmatters/newrelic-api) - Java client library for the New Relic Monitoring and Alerting REST APIs
+* [opsmatters-core](https://github.com/opsmatters/opsmatters-core) - Core library for the opsmatters suite
 * [SnakeYAML](https://bitbucket.org/asomov/snakeyaml) - A YAML processor for the Java Virtual Machine
 * [Maven](https://maven.apache.org/) - Dependency Management
 * [JUnit](http://junit.org/) - Unit testing framework
