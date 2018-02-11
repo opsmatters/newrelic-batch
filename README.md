@@ -1,9 +1,9 @@
 ![opsmatters](https://i.imgur.com/VoLABc1.png)
 
-# New Relic Batch Dashboards 
-[![Build Status](https://travis-ci.org/opsmatters/newrelic-batch-dashboards.svg?branch=master)](https://travis-ci.org/opsmatters/newrelic-batch-dashboards)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch-dashboards/badge.svg?style=blue)](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch-dashboards)
-[![Javadocs](http://javadoc.io/badge/com.opsmatters/newrelic-batch-dashboards.svg)](http://javadoc.io/doc/com.opsmatters/newrelic-batch-dashboards)
+# New Relic Batch 
+[![Build Status](https://travis-ci.org/opsmatters/newrelic-batch.svg?branch=master)](https://travis-ci.org/opsmatters/newrelic-batch)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch/badge.svg?style=blue)](https://maven-badges.herokuapp.com/maven-central/com.opsmatters/newrelic-batch)
+[![Javadocs](http://javadoc.io/badge/com.opsmatters/newrelic-batch.svg)](http://javadoc.io/doc/com.opsmatters/newrelic-batch)
 
 Java library that allows New Relic Insights dashboards to be created from a definition in a YAML file.
 It provides a set of tools to simplify or automate the configuration of New Relic Insights dashboards.
@@ -23,8 +23,8 @@ The Admin API Key is referenced in the documentation as the parameter "YOUR_API_
 
 First clone the repository using:
 ```
->$ git clone https://github.com/opsmatters/newrelic-batch-dashboards.git
->$ cd newrelic-batch-dashboards
+>$ git clone https://github.com/opsmatters/newrelic-batch.git
+>$ cd newrelic-batch
 ```
 
 To compile the source code, run all tests, and generate all artefacts (including sources, javadoc, etc):
@@ -51,7 +51,7 @@ Add the following dependency to include the artefact within your project:
 ```
 <dependency>
   <groupId>com.opsmatters</groupId>
-  <artifactId>newrelic-batch-dashboards</artifactId>
+  <artifactId>newrelic-batch</artifactId>
   <version>0.1.0</version>
 </dependency>
 ```
@@ -69,13 +69,13 @@ Please read [CONTRIBUTING.md](https://www.contributor-covenant.org/version/1/4/c
 
 ## Versioning
 
-This project use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/opsmatters/newrelic-batch-dashboards/tags). 
+This project use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/opsmatters/newrelic-batch/tags). 
 
 ## Authors
 
 * **Gerald Curley** - *Initial work* - [opsmatters](https://github.com/opsmatters)
 
-See also the list of [contributors](https://github.com/opsmatters/newrelic-batch-dashboards/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/opsmatters/newrelic-batch/contributors) who participated in this project.
 
 ## License
 
