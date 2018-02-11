@@ -1,0 +1,109 @@
+#
+# Configuration file for a set of test Insights dashboards
+#
+
+yaml-dashboard-1:
+  icon: line-chart
+  version: 1
+  visibility: all
+  editable: editable_by_all
+  widgets:
+    my markdown widget:
+      visualization: markdown
+      notes: markdown notes
+      layout:
+        row: 1
+        column: 2
+        width: 2
+        height: 1
+      account_id: 1828263
+      data:
+        source: "# Dashboard Notes\n\nHere are some YAML notes 1"
+    my threshold chart widget:
+      visualization: gauge
+      notes: threshold notes
+      layout: [2,1]
+      account_id: 1828263
+      data:
+        nrql: SELECT average(cpuPercent) from ProcessSample SINCE 10 minutes ago
+      threshold:
+        red: 10
+        yellow: 5
+    my facet chart widget:
+      visualization: facet_pie_chart
+      notes: facet pie notes
+      layout: [3,1]
+      account_id: 1828263
+      drilldown_dashboard_id: 12345
+      data:
+        nrql: SELECT count(*) FROM ProcessSample SINCE 1 DAY AGO FACET commandName
+    my event chart widget:
+      visualization: histogram
+      notes: event notes
+      layout: [4,1]
+      account_id: 1828263
+      data:
+        nrql: SELECT histogram(threadCount,10,20) from ProcessSample SINCE yesterday
+    my metric line chart widget:
+      visualization: metric_line_chart
+      notes: metric line notes
+      layout: [5,1]
+      account_id: 1828263
+      data:
+        duration: 43200000
+        entity_ids: [ 12345 ]
+        metrics: [ {"name":"Apdex", "values":["score"]} ]
+        order_by: "score"
+        limit: 20
+    my breakdown metric chart widget:
+      visualization: application_breakdown
+      notes: breakdown notes
+      layout: [6,1]
+      account_id: 1828263
+      data:
+        duration: 86400000
+        entity_ids: [ 12345 ]
+    my inventory chart widget:
+      visualization: inventory
+      notes: inventory notes
+      layout: [7,1]
+      account_id: 1828263
+      data:
+        duration: [ metadata/system ]
+        filters: {"operatingSystem":"linux"}
+    my traffic light chart widget:
+      visualization: traffic_light
+      notes: traffic light notes
+      layout: [8,1]
+      account_id: 1828263
+      data:
+        nrql: "SELECT max(cpuPercent) from ProcessSample SINCE 10 minutes ago"
+      traffic_light:
+        id: 123-456
+        title: cpu-percent
+        subtitle: maximum
+        states: [
+          {"type":"wrong", "min":0, "max":3},
+          {"type":"warning", "min":3, "max":7},
+          {"type":"ok", "min":7, "max":10}
+        ]
+  filter:
+    event_types: [ "SystemSample" ]
+    attributes: [ "cpuPercent" ]
+
+yaml-dashboard-2:
+  icon: line-chart
+  version: 2
+  visibility: all
+  editable: editable_by_all
+  widgets:
+    markdown widget title:
+      visualization: markdown
+      notes: markdown notes
+      layout: [1,1,2,1]
+      account_id: 1828263
+      data:
+        source: "# Dashboard Notes\n\nHere are some YAML notes 2"
+  filter:
+    event_types: [ "SystemSample" ]
+    attributes: [ "cpuPercent" ]
