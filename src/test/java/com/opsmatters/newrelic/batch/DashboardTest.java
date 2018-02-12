@@ -17,11 +17,15 @@
 package com.opsmatters.newrelic.batch;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Collection;
 import java.util.logging.Logger;
 import org.junit.Test;
 import junit.framework.Assert;
 import com.opsmatters.core.util.TextFile;
 import com.opsmatters.newrelic.api.Constants;
+import com.opsmatters.newrelic.api.NewRelicApi;
+import com.opsmatters.newrelic.api.model.insights.Dashboard;
 import com.opsmatters.newrelic.batch.parsers.DashboardParser;
 import com.opsmatters.newrelic.batch.model.Dashboards;
 
@@ -45,42 +49,67 @@ public class DashboardTest
         String testName = "NewRelicDashboardTest";
         logger.info("Starting test: "+testName);
 
-        // Load the test dashboards file
-        logger.info("Loading dashboards file: "+FILENAME);
-/* GERALD
-        DashboardConfiguration config = new DashboardConfiguration();
-
-        try
-        {
-            config.read(FILENAME);
-        }
-        catch(IOException e)
-        {
-            logger.severe("Error loading dashboards file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-*/
+        // Read the dashboard file
+        logger.info("Loading dashboard file: "+FILENAME);
         TextFile file = new TextFile(FILENAME);
-        Dashboards dashboards = new Dashboards();
+//GERALD: rename Dashboards to DashboardConfiguration?
+        Dashboards config = new Dashboards();
         try
         {
             if(file.read())
-                DashboardParser.parseYaml(file.getContents(), dashboards);
+                config.setDashboards(DashboardParser.fromYaml(file.getContents()));
         }
         catch(IOException e)
         {
-            logger.severe("Error loading dashboards file: "+e.getClass().getName()+": "+e.getMessage());
+            logger.severe("Error reading dashboard file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+//GERALD: temp
+        catch(Exception e)
+        {
+            e.printStackTrace();
         }
 
-//GERALD
-System.out.println("DashboardTest:1: dashboards="+dashboards.getDashboards());
-        Assert.assertTrue(dashboards.getDashboards().size() > 0);
+        List<Dashboard> dashboards = config.getDashboards();
+        Assert.assertTrue(config.numDashboards() > 0);
 
-//GERALD: delete the dashboards before creating them again
+//GERALD: move to new DashboardManager class that takes a DashboardConfiguration?
+        // Initialise the client
+        logger.info("Initialise the client");
+        NewRelicApi api = getApiClient();
+        Assert.assertNotNull(api);
 
-//GERALD: import the dashboards to NR
+        // Create the dashboards
+        logger.info("Creating "+config.numDashboards()+" dashboards");
+        for(Dashboard dashboard : dashboards)
+        {
+            // Delete existing dashboards first
+            deleteDashboards(api, dashboard.getTitle());
+
+            logger.info("Creating dashboard: "+dashboard.getTitle());
+            dashboard = api.dashboards().create(dashboard).get();
+            logger.info("Created dashboard: "+dashboard.getId()+" -"+dashboard.getTitle());
+        }
 
 //GERALD: write the dashboards to a new file name
 
         logger.info("Completed test: "+testName);
     }
+
+    private void deleteDashboards(NewRelicApi api, String title)
+    {
+        Collection<Dashboard> dashboards = api.dashboards().list(title);
+        for(Dashboard dashboard : dashboards)
+        {
+            logger.info("Deleting existing dashboard: "+dashboard.getId());
+            api.dashboards().delete(dashboard.getId());
+            logger.info("Deleted existing dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
+        }
+    }
+
+    public NewRelicApi getApiClient()
+    {
+        return NewRelicApi.builder()
+            .apiKey(apiKey)
+            .build();
+	}
 }

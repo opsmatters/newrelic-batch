@@ -40,11 +40,30 @@ public class Dashboards
     }
 
     /**
-     * Returns the dashboards read from the file.
-     * @return The dashboards read from the file
+     * Replaces the dashboards with the given set of dashboards.
+     * @param dashboards The set of dashboards
+     */
+    public void setDashboards(List<Dashboard> dashboards)
+    {
+        this.dashboards.clear();
+        this.dashboards.addAll(dashboards);
+    }
+
+    /**
+     * Returns the set of dashboards.
+     * @return The set of dashboards
      */
     public List<Dashboard> getDashboards()
     {
         return dashboards;
+    }
+
+    /**
+     * Returns the number of dashboards.
+     * @return The number of dashboards
+     */
+    public int numDashboards()
+    {
+        return dashboards.size();
     }
 }

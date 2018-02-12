@@ -19,6 +19,7 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
@@ -40,8 +41,6 @@ import com.opsmatters.newrelic.api.model.insights.widgets.Threshold;
 import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLight;
 import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLightState;
 import com.opsmatters.newrelic.api.model.metrics.Metric;
-//GERALD
-import com.opsmatters.newrelic.batch.model.Dashboards;
 
 /**
  * Dashboards parser that converts to/from YAML format.
@@ -60,17 +59,6 @@ public class DashboardParser
     }
 
     /**
-     * Replaces the dashboards in the given configuration with those read from the given YAML string.
-     * @param contents The contents of the YAML file as a string
-     * @param dashboards The dashboard configuration
-     */
-    public static void parseYaml(String contents, Dashboards dashboards)
-    {
-        dashboards.getDashboards().clear();
-        dashboards.getDashboards().addAll(fromYaml(contents));
-    }
-
-    /**
      * Reads the dashboards configuration from the given string.
      * @param contents The contents of the file as a string
      * @return The dashboards read from the YAML string
@@ -83,7 +71,10 @@ public class DashboardParser
         Map<String,Object> map = (Map<String,Object>)yaml.load(contents);
         for(Map.Entry<String,Object> entry : map.entrySet())
         {
-            ret.add(getDashboard(entry.getKey(), (Map<String,Object>)entry.getValue()));
+            if(entry.getValue() instanceof Map)
+                ret.add(getDashboard(entry.getKey(), (Map<String,Object>)entry.getValue()));
+            else
+                logger.severe("Not a YAML document");
         }
 
         return ret;
@@ -100,21 +91,21 @@ public class DashboardParser
         // Get the filter
         List<String> eventTypes = null;
         List<String> attributes = null;
-        Map<String,Object> filter = (Map<String,Object>)map.get("filter");
+        Map<String,Object> filter = getAs(map, "filter", Map.class);
         if(filter != null)
         {
-            eventTypes = (List<String>)filter.get("event_types");
-            attributes = (List<String>)filter.get("attributes");
+            eventTypes = getAs(filter, "event_types", List.class);
+            attributes = getAs(filter, "attributes", List.class);
         }
 
         return Dashboard.builder()
             .title(title)
-            .icon((String)map.get("icon"))
-            .version(getIntValue(map, "version", 1))
-            .visibility((String)map.get("visibility"))
-            .editable((String)map.get("editable"))
+            .icon(getAs(map, "icon", String.class, false))
+            .version(getAs(map, "version", Integer.class))
+            .visibility(getAs(map, "visibility", String.class))
+            .editable(getAs(map, "editable", String.class))
             .setFilter(eventTypes, attributes)
-            .widgets(getWidgets((Map<String,Object>)map.get("widgets")))
+            .widgets(getWidgets(getAs(map, "widgets", Map.class)))
             .build();
     }
 
@@ -130,7 +121,12 @@ public class DashboardParser
         if(map != null)
         {
             for(Map.Entry<String,Object> entry : map.entrySet())
-                ret.add(getWidget(entry.getKey(), (Map<String,Object>)entry.getValue()));
+            {
+                if(entry.getValue() instanceof Map)
+                    ret.add(getWidget(entry.getKey(), (Map<String,Object>)entry.getValue()));
+                else
+                    logger.severe("Not a widget document");
+            }
         }
 
         return ret;
@@ -145,7 +141,7 @@ public class DashboardParser
     private static Widget getWidget(String title, Map<String,Object> map)
     {
         Widget ret = null;
-        String visualization = (String)map.get("visualization");
+        String visualization = getAs(map, "visualization", String.class);
         if(visualization != null)
         {
             if(EventChart.Visualization.contains(visualization))
@@ -180,7 +176,7 @@ public class DashboardParser
     {
         Markdown.Builder builder = Markdown.builder()
             .visualization(visualization)
-            .addData(getMarkdownData((Map<String,Object>)map.get("data")));
+            .addData(getMarkdownData(getAs(map, "data", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -195,7 +191,7 @@ public class DashboardParser
     {
         EventChart.Builder builder = EventChart.builder()
             .visualization(visualization)
-            .addData(getEventsData((Map<String,Object>)map.get("data")));
+            .addData(getEventsData(getAs(map, "data", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -210,11 +206,11 @@ public class DashboardParser
     {
         FacetChart.Builder builder = FacetChart.builder()
             .visualization(visualization)
-            .addData(getEventsData((Map<String,Object>)map.get("data")));
+            .addData(getEventsData(getAs(map, "data", Map.class)));
 
-        Object id = map.get("drilldown_dashboard_id");
-        if(id instanceof Integer)
-            builder = builder.drilldownDashboardId((Integer)id);
+        Integer id = getAs(map, "drilldown_dashboard_id", Integer.class);
+        if(id != null)
+            builder = builder.drilldownDashboardId(id);
 
         return getWidget(builder, title, map).build();
     }
@@ -230,8 +226,8 @@ public class DashboardParser
     {
         ThresholdEventChart.Builder builder = ThresholdEventChart.builder()
             .visualization(visualization)
-            .threshold(getThreshold((Map<String,Object>)map.get("threshold")))
-            .addData(getEventsData((Map<String,Object>)map.get("data")));
+            .threshold(getThreshold(getAs(map, "threshold", Map.class)))
+            .addData(getEventsData(getAs(map, "data", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -246,7 +242,7 @@ public class DashboardParser
     {
         BreakdownMetricChart.Builder builder = BreakdownMetricChart.builder()
             .visualization(visualization)
-            .addData(getMetricsData((Map<String,Object>)map.get("data")));
+            .addData(getMetricsData(getAs(map, "data", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -261,7 +257,7 @@ public class DashboardParser
     {
         MetricLineChart.Builder builder = MetricLineChart.builder()
             .visualization(visualization)
-            .addData(getMetricsData((Map<String,Object>)map.get("data")));
+            .addData(getMetricsData(getAs(map, "data", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -276,7 +272,7 @@ public class DashboardParser
     {
         InventoryChart.Builder builder = InventoryChart.builder()
             .visualization(visualization)
-            .addData(getInventoryData((Map<String,Object>)map.get("data")));
+            .addData(getInventoryData(getAs(map, "data", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -291,8 +287,8 @@ public class DashboardParser
     {
         TrafficLightChart.Builder builder = TrafficLightChart.builder()
             .visualization(visualization)
-            .addData(getEventsData((Map<String,Object>)map.get("data")))
-            .addTrafficLight(getTrafficLight((Map<String,Object>)map.get("traffic_light")));
+            .addData(getEventsData(getAs(map, "data", Map.class)))
+            .addTrafficLight(getTrafficLight(getAs(map, "traffic_light", Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -304,7 +300,7 @@ public class DashboardParser
     private static MarkdownData getMarkdownData(Map<String,Object> map)
     {
         return MarkdownData.builder()
-            .source((String)map.get("source"))
+            .source(getAs(map, "source", String.class))
             .build();
     }
 
@@ -316,7 +312,7 @@ public class DashboardParser
     private static EventsData getEventsData(Map<String,Object> map)
     {
         return EventsData.builder()
-            .nrql((String)map.get("nrql"))
+            .nrql(getAs(map, "nrql", String.class))
             .build();
     }
 
@@ -327,41 +323,33 @@ public class DashboardParser
      */
     private static MetricsData getMetricsData(Map<String,Object> map)
     {
-        Integer limit = null;
-        Object l = map.get("limit");
-        if(l instanceof Integer)
-            limit = (Integer)l;
-
-        Integer duration = null;
-        Object d = map.get("duration");
-        if(d instanceof Integer)
-            duration = (Integer)d;
-
-        List<Long> entityIds = null;
-        Object e = map.get("entity_ids");
-        if(e instanceof List)
-            entityIds = (List<Long>)e;
-
-        List<Metric> metrics = null;
-        Object m = map.get("metrics");
-
-        if(m instanceof List)
-        {
-            metrics = new ArrayList<Metric>();
-            for(Map item : (List<Map>)m)
-                metrics.add(getMetric(item));
-        }
-
         MetricsData.Builder builder = MetricsData.builder()
-            .orderBy((String)map.get("order_by"));
+            .orderBy(getAs(map, "order_by", String.class, false));
+
+        Integer duration = getAs(map, "duration", Integer.class, false);
         if(duration != null)
             builder = builder.duration(duration);
-        if(entityIds != null)
-            builder = builder.entityIds(entityIds);
+
+        List<Metric> metrics = null;
+        List list = getAs(map, "metrics", List.class, false);
+        if(list != null)
+        {
+            metrics = new ArrayList<Metric>();
+            for(Object item : list)
+                metrics.add(getMetric(coerceTo("metrics", item, Map.class)));
+        }
+
         if(metrics != null)
             builder = builder.metrics(metrics);
+
+        List<Long> entityIds = getAs(map, "entity_ids", List.class, false);
+        if(entityIds != null)
+            builder = builder.entityIds(entityIds);
+
+        Integer limit = getAs(map, "limit", Integer.class, false);
         if(limit != null)
             builder = builder.limit(limit);
+
         return  builder.build();
     }
 
@@ -372,15 +360,13 @@ public class DashboardParser
      */
     private static InventoryData getInventoryData(Map<String,Object> map)
     {
-        List<String> sources = null;
-        Object s = map.get("sources");
-        if(s instanceof List)
-            sources = (List<String>)s;
+        List<String> sources = getAs(map, "sources", List.class);
+        if(sources == null)
+            sources = new ArrayList<String>();
 
-        Map<String,String> filters = null;
-        Object f = map.get("filters");
-        if(f instanceof Map)
-            filters = (Map<String,String>)f;
+        Map<String,String> filters = getAs(map, "filters", Map.class, false);
+        if(filters == null)
+            filters = new HashMap<String,String>();
 
         return InventoryData.builder()
             .sources(sources)
@@ -396,8 +382,8 @@ public class DashboardParser
     private static Threshold getThreshold(Map<String,Object> map)
     {
         return Threshold.builder()
-            .red((Integer)map.get("red"))
-            .yellow((Integer)map.get("yellow"))
+            .red(getAs(map, "red", Integer.class))
+            .yellow(getAs(map, "yellow", Integer.class))
             .build();
     }
 
@@ -408,15 +394,12 @@ public class DashboardParser
      */
     private static Metric getMetric(Map<String,Object> map)
     {
-        List<String> values = null;
-        Object v = map.get("values");
-        if(v instanceof List)
-            values = (List<String>)v;
-
-        return Metric.builder()
-            .name((String)map.get("name"))
-            .values(values)
-            .build();
+        List<String> values = getAs(map, "values", List.class, false);
+        Metric.Builder builder = Metric.builder()
+            .name(getAs(map, "name", String.class, false));
+        if(values != null)
+            builder = builder.values(values);
+        return builder.build();
     }
 
     /**
@@ -426,16 +409,11 @@ public class DashboardParser
      */
     private static TrafficLight getTrafficLight(Map<String,Object> map)
     {
-        List<TrafficLightState> states = null;
-        Object s = map.get("states");
-        if(s instanceof List)
-            states = getTrafficLightStates((List)s);
-
         return TrafficLight.builder()
-            .id((String)map.get("id"))
-            .title((String)map.get("title"))
-            .subtitle((String)map.get("subtitle"))
-            .states(states)
+            .id(getAs(map, "id", String.class))
+            .title(getAs(map, "title", String.class, false))
+            .subtitle(getAs(map, "subtitle", String.class, false))
+            .states(getTrafficLightStates(getAs(map, "states", List.class)))
             .build();
     }
 
@@ -446,6 +424,9 @@ public class DashboardParser
      */
     private static List<TrafficLightState> getTrafficLightStates(List states)
     {
+        if(states == null)
+            return null;
+
         List<TrafficLightState> ret = new ArrayList<TrafficLightState>();
         for(Object state : states)
         {
@@ -454,19 +435,23 @@ public class DashboardParser
                 Map<String,Object> map = (Map<String,Object>)state;
 
                 TrafficLightState.Builder builder = TrafficLightState.builder()
-                    .type((String)map.get("type"));
+                    .type(getAs(map, "type", String.class));
 
-                Integer min = (Integer)map.get("min");
+                Integer min = getAs(map, "min", Integer.class);
                 if(min != null)
                     builder = builder.min(min);
 
-                Integer max = (Integer)map.get("max");
+                Integer max = getAs(map, "max", Integer.class);
                 if(max != null)
                     builder = builder.max(max);
 
                 ret.add(builder.build());
             }
         }
+
+        if(ret.size() == 0)
+            throw new IllegalArgumentException("traffic light must contain at least one state");
+
         return ret;
     }
 
@@ -480,9 +465,9 @@ public class DashboardParser
     {
         builder = builder
             .title(title)
-            .notes((String)map.get("notes"));
+            .notes(getAs(map, "notes", String.class, false));
 
-        Integer accountId = (Integer)map.get("account_id");
+        Integer accountId = getAs(map, "account_id", Integer.class);
         if(accountId != null)
             builder = builder.accountId(accountId);
 
@@ -502,12 +487,25 @@ public class DashboardParser
      */
     private static Layout getLayout(Map<String,Object> map)
     {
-        return Layout.builder()
-            .row(getIntValue(map, "row", 0))
-            .column(getIntValue(map, "column", 0))
-            .width(getIntValue(map, "width", 1))
-            .height(getIntValue(map, "height", 1))
-            .build();
+        Layout.Builder builder = Layout.builder();
+
+        Integer row = getAs(map, "row", Integer.class);
+        if(row != null)
+            builder = builder.row(row);
+
+        Integer column = getAs(map, "column", Integer.class);
+        if(column != null)
+            builder = builder.column(column);
+
+        Integer width = getAs(map, "width", Integer.class, false);
+        if(width != null)
+            builder = builder.width(width);
+
+        Integer height = getAs(map, "height", Integer.class, false);
+        if(height != null)
+            builder = builder.height(height);
+
+        return builder.build();
     }
 
     /**
@@ -526,24 +524,66 @@ public class DashboardParser
     }
 
     /**
-     * Reads an integer value from the given map.
+     * Reads a value from the given map and coerces it to the given class.
      * @param map The map to read the value from
      * @param name The name of the property
-     * @param deflt Default value to use if the value is not found
-     * @return The integer value
+     * @param target The target class of the returned value
+     * @return The value of the property from the map
      */
-    private static int getIntValue(Map<String,Object> map, String name, int deflt)
+    @SuppressWarnings("unchecked")
+    private static <E> E getAs(Map<String,Object> map, String name, Class<E> target) 
+        throws IllegalArgumentException
     {
-        int ret = -1;
+        return getAs(map, name, target, true);
+    }
+
+    /**
+     * Reads a value from the given map and coerces it to the given class.
+     * @param map The map to read the value from
+     * @param name The name of the property
+     * @param target The target class of the returned value
+     * @param mandatory <CODE>true</CODE> if the field cannot be null
+     * @return The value of the property from the map
+     */
+    @SuppressWarnings("unchecked")
+    private static <E> E getAs(Map<String,Object> map, String name, Class<E> target, boolean mandatory) 
+        throws IllegalArgumentException
+    {
+        E ret = null;
+
         Object value = map.get(name);
         if(value != null)
         {
-            ret = Integer.parseInt(value.toString());
+            ret = coerceTo(name, value, target);
         }
-        else
+        else if(mandatory)
         {
-            ret = deflt;
+            throw new IllegalArgumentException(name+": expected "+target.getName()
+                +" but was missing");
         }
+
+        return ret;
+    }
+
+    /**
+     * Coerce the value to the given class.
+     * @param name The name of the property
+     * @param value The value to coerce
+     * @param target The target class of the returned value
+     * @return The value 
+     */
+    @SuppressWarnings("unchecked")
+    private static <E> E coerceTo(String name, Object value, Class<E> target) 
+        throws IllegalArgumentException
+    {
+        E ret = null;
+
+        if(target.isInstance(value))
+            ret = (E)value;
+        else if(value != null)
+            throw new IllegalArgumentException(name+": expected "+target.getName()
+                +" but was "+value.getClass().getName());
+
         return ret;
     }
 }
