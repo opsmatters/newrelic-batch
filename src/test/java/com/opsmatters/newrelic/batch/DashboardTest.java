@@ -18,16 +18,14 @@ package com.opsmatters.newrelic.batch;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Collection;
 import java.util.logging.Logger;
 import org.junit.Test;
 import junit.framework.Assert;
 import com.opsmatters.core.util.TextFile;
 import com.opsmatters.newrelic.api.Constants;
-import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
 import com.opsmatters.newrelic.batch.parsers.DashboardParser;
-import com.opsmatters.newrelic.batch.model.Dashboards;
+import com.opsmatters.newrelic.batch.model.DashboardConfiguration;
 
 /**
  * The set of tests used for importing and exporting dashboards.
@@ -52,8 +50,8 @@ public class DashboardTest
         // Read the dashboard file
         logger.info("Loading dashboard file: "+FILENAME);
         TextFile file = new TextFile(FILENAME);
-//GERALD: rename Dashboards to DashboardConfiguration?
-        Dashboards config = new Dashboards();
+        DashboardConfiguration config = new DashboardConfiguration();
+
         try
         {
             if(file.read())
@@ -72,44 +70,12 @@ public class DashboardTest
         List<Dashboard> dashboards = config.getDashboards();
         Assert.assertTrue(config.numDashboards() > 0);
 
-//GERALD: move to new DashboardManager class that takes a DashboardConfiguration?
-        // Initialise the client
-        logger.info("Initialise the client");
-        NewRelicApi api = getApiClient();
-        Assert.assertNotNull(api);
-
-        // Create the dashboards
-        logger.info("Creating "+config.numDashboards()+" dashboards");
-        for(Dashboard dashboard : dashboards)
-        {
-            // Delete existing dashboards first
-            deleteDashboards(api, dashboard.getTitle());
-
-            logger.info("Creating dashboard: "+dashboard.getTitle());
-            dashboard = api.dashboards().create(dashboard).get();
-            logger.info("Created dashboard: "+dashboard.getId()+" -"+dashboard.getTitle());
-        }
+        DashboardManager manager = new DashboardManager(apiKey);
+        manager.delete(config);
+        manager.create(config);
 
 //GERALD: write the dashboards to a new file name
 
         logger.info("Completed test: "+testName);
     }
-
-    private void deleteDashboards(NewRelicApi api, String title)
-    {
-        Collection<Dashboard> dashboards = api.dashboards().list(title);
-        for(Dashboard dashboard : dashboards)
-        {
-            logger.info("Deleting existing dashboard: "+dashboard.getId());
-            api.dashboards().delete(dashboard.getId());
-            logger.info("Deleted existing dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
-        }
-    }
-
-    public NewRelicApi getApiClient()
-    {
-        return NewRelicApi.builder()
-            .apiKey(apiKey)
-            .build();
-	}
 }

@@ -26,16 +26,16 @@ import com.opsmatters.newrelic.api.model.insights.Dashboard;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class Dashboards
+public class DashboardConfiguration
 {
-    private static final Logger logger = Logger.getLogger(Dashboards.class.getName());
+    private static final Logger logger = Logger.getLogger(DashboardConfiguration.class.getName());
 
     private List<Dashboard> dashboards = new ArrayList<Dashboard>();
 
     /**
      * Default constructor.
      */
-    public Dashboards()
+    public DashboardConfiguration()
     {
     }
 
@@ -65,5 +65,14 @@ public class Dashboards
     public int numDashboards()
     {
         return dashboards.size();
+    }
+
+    /**
+     * Returns a string representation of the object.
+     */
+    @Override
+    public String toString()
+    {
+        return "DashboardConfiguration [dashboards="+dashboards.size()+"]";
     }
 }
