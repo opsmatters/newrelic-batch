@@ -41,6 +41,7 @@ Writer writer = new FileWriter("new_dashboards.yml");
 DashboardParser.toYaml(config.getDashboards(), writer, "My Dashboards");
 writer.close();
 ```
+An example YAML file containing multiple dashboards and widgets can be found in the [tests](src/test/resources/test-dashboards.yml).
 
 ## Prerequisites
 
