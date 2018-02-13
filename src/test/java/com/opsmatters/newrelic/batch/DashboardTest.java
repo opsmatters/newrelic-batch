@@ -16,12 +16,16 @@
 
 package com.opsmatters.newrelic.batch;
 
+import java.io.Reader;
+import java.io.FileReader;
+import java.io.Writer;
+import java.io.FileWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import org.junit.Test;
 import junit.framework.Assert;
-import com.opsmatters.core.util.TextFile;
 import com.opsmatters.newrelic.api.Constants;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
 import com.opsmatters.newrelic.batch.parsers.DashboardParser;
@@ -39,7 +43,9 @@ public class DashboardTest
     // Get the properties
     private String apiKey = System.getProperty(Constants.API_KEY_PROPERTY);
 
-    private static final String FILENAME = "target/test-classes/test-dashboards.yml";
+    private static final String PATH = "target/test-classes/";
+    private static final String INPUT_FILENAME = "test-dashboards.yml";
+    private static final String OUTPUT_FILENAME = "test-dashboards-new.yml";
 
     @Test
     public void testNewRelicDashboards()
@@ -47,34 +53,79 @@ public class DashboardTest
         String testName = "NewRelicDashboardTest";
         logger.info("Starting test: "+testName);
 
-        // Read the dashboard file
-        logger.info("Loading dashboard file: "+FILENAME);
-        TextFile file = new TextFile(FILENAME);
         DashboardConfiguration config = new DashboardConfiguration();
 
+        // Read the dashboard file
+        logger.info("Loading dashboard file: "+PATH+INPUT_FILENAME);
+        Reader reader = null;
         try
         {
-            if(file.read())
-                config.setDashboards(DashboardParser.fromYaml(file.getContents()));
+            reader = new FileReader(PATH+INPUT_FILENAME);
+            config.setDashboards(DashboardParser.fromYaml(reader));
         }
-        catch(IOException e)
+        catch(FileNotFoundException e)
         {
-            logger.severe("Error reading dashboard file: "+e.getClass().getName()+": "+e.getMessage());
+            logger.severe("Unable to find dashboard file: "+e.getClass().getName()+": "+e.getMessage());
         }
-//GERALD: temp
         catch(Exception e)
         {
             e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(reader != null)
+                    reader.close();
+            }
+            catch(IOException e)
+            {
+            }
         }
 
         List<Dashboard> dashboards = config.getDashboards();
         Assert.assertTrue(config.numDashboards() > 0);
 
         DashboardManager manager = new DashboardManager(apiKey);
-        manager.delete(config);
-        manager.create(config);
 
-//GERALD: write the dashboards to a new file name
+        // Delete the existing dashboards
+        List<Dashboard> deleted = manager.delete(config);
+        Assert.assertTrue(deleted.size() == dashboards.size());
+
+        // Create the new dashboards
+        List<Dashboard> created = manager.create(config);
+        Assert.assertTrue(created.size() == dashboards.size());
+
+        // Write the new dashboards to a new filename
+        logger.info("Writing dashboard file: "+PATH+OUTPUT_FILENAME);
+        Writer writer = null;
+        try
+        {
+            writer = new FileWriter(PATH+OUTPUT_FILENAME);
+            DashboardParser.toYaml(dashboards, writer, OUTPUT_FILENAME);
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write dashboard file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+
+        // Compare the old and new YAML files
+        //Assert.assertEquals(DashboardParser.toYaml(dashboards), DashboardParser.toYaml(created));
 
         logger.info("Completed test: "+testName);
     }
