@@ -12,7 +12,35 @@ It provides a set of tools to accelerate or automate the deployment of New Relic
 
 ## Examples
 
-TBC
+### Dashboards
+First create a dashboard configuration:
+```
+DashboardConfiguration config = new DashboardConfiguration();
+```
+Next, load a file containing dashboards in YAML format into the dashboard configuration:
+```
+Reader reader = new FileReader("dashboards.yml");
+config.setDashboards(DashboardParser.fromYaml(reader));
+reader.close();
+```
+To carry out operations on the dashboards in the dashboard configuration, first create a manager:
+```
+DashboardManager manager = new DashboardManager("YOUR_API_KEY");
+```
+To create the dashboards in the dashboard configuration in New Relic:
+```
+List<Dashboard> created = manager.create(config);
+```
+Alternatively, to delete the dashboards in the dashboard configuration from New Relic:
+```
+List<Dashboard> deleted = manager.delete(config);
+```
+Finally, to output a set of dashboards to a YAML file, including a banner:
+```
+Writer writer = new FileWriter("new_dashboards.yml");
+DashboardParser.toYaml(config.getDashboards(), writer, "My Dashboards");
+writer.close();
+```
 
 ## Prerequisites
 
@@ -43,7 +71,7 @@ mvn clean test
 
 The following tests are included:
 
-* TBC
+* NewRelicDashboardTest: Reads the definition of several dashboards containing multiple widgets from a YAML file and creates the dashboards in New Relic. Then exports the same dashboards to a different YAML file.
 
 ## Deployment
 
