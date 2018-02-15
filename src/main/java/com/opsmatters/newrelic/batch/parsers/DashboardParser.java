@@ -24,6 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
+import com.opsmatters.newrelic.api.model.insights.Metadata;
+import com.opsmatters.newrelic.api.model.insights.Filter;
 import com.opsmatters.newrelic.api.model.insights.widgets.Widget;
 import com.opsmatters.newrelic.api.model.insights.widgets.EventChart;
 import com.opsmatters.newrelic.api.model.insights.widgets.BreakdownMetricChart;
@@ -40,6 +42,10 @@ import com.opsmatters.newrelic.api.model.insights.widgets.InventoryData;
 import com.opsmatters.newrelic.api.model.insights.widgets.Threshold;
 import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLight;
 import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLightState;
+import com.opsmatters.newrelic.api.model.insights.widgets.Presentation;
+import com.opsmatters.newrelic.api.model.insights.widgets.DrilldownPresentation;
+import com.opsmatters.newrelic.api.model.insights.widgets.ThresholdPresentation;
+import com.opsmatters.newrelic.api.model.insights.widgets.TrafficLightPresentation;
 import com.opsmatters.newrelic.api.model.insights.widgets.Layout;
 import com.opsmatters.newrelic.api.model.metrics.Metric;
 
@@ -51,52 +57,6 @@ import com.opsmatters.newrelic.api.model.metrics.Metric;
 public class DashboardParser
 {
     private static final Logger logger = Logger.getLogger(DashboardParser.class.getName());
-
-//GERALD: move out
-    // The field names
-    public static final String TITLE = "title";
-    public static final String SUBTITLE = "subtitle";
-    public static final String NOTES = "notes";
-    public static final String ICON = "icon";
-    public static final String VERSION = "version";
-    public static final String VISIBILITY = "visibility";
-    public static final String EDITABLE = "editable";
-    public static final String FILTER = "filter";
-    public static final String EVENT_TYPES = "event_types";
-    public static final String ATTRIBUTES = "attributes";
-    public static final String WIDGETS = "widgets";
-    public static final String VISUALIZATION = "visualization";
-    public static final String ACCOUNT_ID = "account_id";
-    public static final String DATA = "data";
-    public static final String NRQL = "nrql";
-    public static final String SOURCE = "source";
-    public static final String SOURCES = "sources";
-    public static final String DRILLDOWN_DASHBOARD_ID = "drilldown_dashboard_id";
-    public static final String THRESHOLD = "threshold";
-    public static final String DURATION = "duration";
-    public static final String METRICS = "metrics";
-    public static final String ENTITY_IDS = "entity_ids";
-    public static final String END_TIME = "end_time";
-    public static final String ORDER_BY = "order_by";
-    public static final String LIMIT = "limit";
-    public static final String FILTERS = "filters";
-    public static final String ID = "id";
-    public static final String RED = "red";
-    public static final String YELLOW = "yellow";
-    public static final String NAME = "name";
-    public static final String UNITS = "units";
-    public static final String SCOPE = "scope";
-    public static final String VALUES = "values";
-    public static final String TRAFFIC_LIGHT = "traffic_light";
-    public static final String STATES = "states";
-    public static final String TYPE = "type";
-    public static final String MIN = "min";
-    public static final String MAX = "max";
-    public static final String LAYOUT = "layout";
-    public static final String ROW = "row";
-    public static final String COLUMN = "column";
-    public static final String WIDTH = "width";
-    public static final String HEIGHT = "height";
 
     /**
      * Private constructor.
@@ -164,21 +124,21 @@ public class DashboardParser
         // Get the filter
         List<String> eventTypes = null;
         List<String> attributes = null;
-        Map<String,Object> filter = getAs(map, FILTER, Map.class);
+        Map<String,Object> filter = getAs(map,  Dashboard.FILTER, Map.class);
         if(filter != null)
         {
-            eventTypes = getAs(filter, EVENT_TYPES, List.class);
-            attributes = getAs(filter, ATTRIBUTES, List.class);
+            eventTypes = getAs(filter, Filter.EVENT_TYPES, List.class);
+            attributes = getAs(filter, Filter.ATTRIBUTES, List.class);
         }
 
         return Dashboard.builder()
             .title(title)
-            .icon(getAs(map, ICON, String.class, false))
-            .version(getAs(map, VERSION, Integer.class))
-            .visibility(getAs(map, VISIBILITY, String.class))
-            .editable(getAs(map, EDITABLE, String.class))
+            .icon(getAs(map, Dashboard.ICON, String.class, false))
+            .version(getAs(map, Metadata.VERSION, Integer.class))
+            .visibility(getAs(map, Dashboard.VISIBILITY, String.class))
+            .editable(getAs(map, Dashboard.EDITABLE, String.class))
             .setFilter(eventTypes, attributes)
-            .widgets(getWidgets(getAs(map, WIDGETS, Map.class)))
+            .widgets(getWidgets(getAs(map, Dashboard.WIDGETS, Map.class)))
             .build();
     }
 
@@ -214,7 +174,7 @@ public class DashboardParser
     private Widget getWidget(String title, Map<String,Object> map)
     {
         Widget ret = null;
-        String visualization = getAs(map, VISUALIZATION, String.class);
+        String visualization = getAs(map, Widget.VISUALIZATION, String.class);
         if(visualization != null)
         {
             if(EventChart.Visualization.contains(visualization))
@@ -249,7 +209,7 @@ public class DashboardParser
     {
         Markdown.Builder builder = Markdown.builder()
             .visualization(visualization)
-            .addData(getMarkdownData(getAs(map, DATA, Map.class)));
+            .addData(getMarkdownData(getAs(map, Widget.DATA, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -264,7 +224,7 @@ public class DashboardParser
     {
         EventChart.Builder builder = EventChart.builder()
             .visualization(visualization)
-            .addData(getEventsData(getAs(map, DATA, Map.class)));
+            .addData(getEventsData(getAs(map, Widget.DATA, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -279,9 +239,9 @@ public class DashboardParser
     {
         FacetChart.Builder builder = FacetChart.builder()
             .visualization(visualization)
-            .addData(getEventsData(getAs(map, DATA, Map.class)));
+            .addData(getEventsData(getAs(map, Widget.DATA, Map.class)));
 
-        Integer id = getAs(map, DRILLDOWN_DASHBOARD_ID, Integer.class);
+        Integer id = getAs(map, DrilldownPresentation.DRILLDOWN_DASHBOARD_ID, Integer.class);
         if(id != null)
             builder = builder.drilldownDashboardId(id);
 
@@ -299,8 +259,8 @@ public class DashboardParser
     {
         ThresholdEventChart.Builder builder = ThresholdEventChart.builder()
             .visualization(visualization)
-            .threshold(getThreshold(getAs(map, THRESHOLD, Map.class)))
-            .addData(getEventsData(getAs(map, DATA, Map.class)));
+            .threshold(getThreshold(getAs(map, ThresholdPresentation.THRESHOLD, Map.class)))
+            .addData(getEventsData(getAs(map, Widget.DATA, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -315,7 +275,7 @@ public class DashboardParser
     {
         BreakdownMetricChart.Builder builder = BreakdownMetricChart.builder()
             .visualization(visualization)
-            .addData(getMetricsData(getAs(map, DATA, Map.class)));
+            .addData(getMetricsData(getAs(map, Widget.DATA, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -330,7 +290,7 @@ public class DashboardParser
     {
         MetricLineChart.Builder builder = MetricLineChart.builder()
             .visualization(visualization)
-            .addData(getMetricsData(getAs(map, DATA, Map.class)));
+            .addData(getMetricsData(getAs(map, Widget.DATA, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -345,7 +305,7 @@ public class DashboardParser
     {
         InventoryChart.Builder builder = InventoryChart.builder()
             .visualization(visualization)
-            .addData(getInventoryData(getAs(map, DATA, Map.class)));
+            .addData(getInventoryData(getAs(map, Widget.DATA, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -360,8 +320,8 @@ public class DashboardParser
     {
         TrafficLightChart.Builder builder = TrafficLightChart.builder()
             .visualization(visualization)
-            .addData(getEventsData(getAs(map, DATA, Map.class)))
-            .addTrafficLight(getTrafficLight(getAs(map, TRAFFIC_LIGHT, Map.class)));
+            .addData(getEventsData(getAs(map, Widget.DATA, Map.class)))
+            .addTrafficLight(getTrafficLight(getAs(map, TrafficLightPresentation.TRAFFIC_LIGHT, Map.class)));
         return getWidget(builder, title, map).build();
     }
 
@@ -373,7 +333,7 @@ public class DashboardParser
     private MarkdownData getMarkdownData(Map<String,Object> map)
     {
         return MarkdownData.builder()
-            .source(getAs(map, SOURCE, String.class))
+            .source(getAs(map, MarkdownData.SOURCE, String.class))
             .build();
     }
 
@@ -385,7 +345,7 @@ public class DashboardParser
     private EventsData getEventsData(Map<String,Object> map)
     {
         return EventsData.builder()
-            .nrql(getAs(map, NRQL, String.class))
+            .nrql(getAs(map, EventsData.NRQL, String.class))
             .build();
     }
 
@@ -397,29 +357,29 @@ public class DashboardParser
     private MetricsData getMetricsData(Map<String,Object> map)
     {
         MetricsData.Builder builder = MetricsData.builder()
-            .orderBy(getAs(map, ORDER_BY, String.class, false));
+            .orderBy(getAs(map, MetricsData.ORDER_BY, String.class, false));
 
-        Integer duration = getAs(map, DURATION, Integer.class, false);
+        Integer duration = getAs(map, MetricsData.DURATION, Integer.class, false);
         if(duration != null)
             builder = builder.duration(duration);
 
         List<Metric> metrics = null;
-        List list = getAs(map, METRICS, List.class, false);
+        List list = getAs(map, MetricsData.METRICS, List.class, false);
         if(list != null)
         {
             metrics = new ArrayList<Metric>();
             for(Object item : list)
-                metrics.add(getMetric(coerceTo(METRICS, item, Map.class)));
+                metrics.add(getMetric(coerceTo(MetricsData.METRICS, item, Map.class)));
         }
 
         if(metrics != null)
             builder = builder.metrics(metrics);
 
-        List<Long> entityIds = getAs(map, ENTITY_IDS, List.class, false);
+        List<Long> entityIds = getAs(map, MetricsData.ENTITY_IDS, List.class, false);
         if(entityIds != null)
             builder = builder.entityIds(entityIds);
 
-        Integer limit = getAs(map, LIMIT, Integer.class, false);
+        Integer limit = getAs(map, MetricsData.LIMIT, Integer.class, false);
         if(limit != null)
             builder = builder.limit(limit);
 
@@ -433,11 +393,11 @@ public class DashboardParser
      */
     private InventoryData getInventoryData(Map<String,Object> map)
     {
-        List<String> sources = getAs(map, SOURCES, List.class);
+        List<String> sources = getAs(map, InventoryData.SOURCES, List.class);
         if(sources == null)
             sources = new ArrayList<String>();
 
-        Map<String,String> filters = getAs(map, FILTERS, Map.class, false);
+        Map<String,String> filters = getAs(map, InventoryData.FILTERS, Map.class, false);
         if(filters == null)
             filters = new LinkedHashMap<String,String>();
 
@@ -455,8 +415,8 @@ public class DashboardParser
     private Threshold getThreshold(Map<String,Object> map)
     {
         return Threshold.builder()
-            .red(getAs(map, RED, Integer.class))
-            .yellow(getAs(map, YELLOW, Integer.class))
+            .red(getAs(map, Threshold.RED, Integer.class))
+            .yellow(getAs(map, Threshold.YELLOW, Integer.class))
             .build();
     }
 
@@ -467,9 +427,9 @@ public class DashboardParser
      */
     private Metric getMetric(Map<String,Object> map)
     {
-        List<String> values = getAs(map, VALUES, List.class, false);
+        List<String> values = getAs(map, Metric.VALUES, List.class, false);
         Metric.Builder builder = Metric.builder()
-            .name(getAs(map, NAME, String.class, false));
+            .name(getAs(map, Metric.NAME, String.class, false));
         if(values != null)
             builder = builder.values(values);
         return builder.build();
@@ -483,10 +443,10 @@ public class DashboardParser
     private TrafficLight getTrafficLight(Map<String,Object> map)
     {
         return TrafficLight.builder()
-            .id(getAs(map, ID, String.class))
-            .title(getAs(map, TITLE, String.class, false))
-            .subtitle(getAs(map, SUBTITLE, String.class, false))
-            .states(getTrafficLightStates(getAs(map, STATES, List.class)))
+            .id(getAs(map, TrafficLight.ID, String.class))
+            .title(getAs(map, TrafficLight.TITLE, String.class, false))
+            .subtitle(getAs(map, TrafficLight.SUBTITLE, String.class, false))
+            .states(getTrafficLightStates(getAs(map, TrafficLight.STATES, List.class)))
             .build();
     }
 
@@ -508,13 +468,13 @@ public class DashboardParser
                 Map<String,Object> map = (Map<String,Object>)state;
 
                 TrafficLightState.Builder builder = TrafficLightState.builder()
-                    .type(getAs(map, TYPE, String.class));
+                    .type(getAs(map, TrafficLightState.TYPE, String.class));
 
-                Integer min = getAs(map, MIN, Integer.class);
+                Integer min = getAs(map, TrafficLightState.MIN, Integer.class);
                 if(min != null)
                     builder = builder.min(min);
 
-                Integer max = getAs(map, MAX, Integer.class);
+                Integer max = getAs(map, TrafficLightState.MAX, Integer.class);
                 if(max != null)
                     builder = builder.max(max);
 
@@ -538,13 +498,13 @@ public class DashboardParser
     {
         builder = builder
             .title(title)
-            .notes(getAs(map, NOTES, String.class, false));
+            .notes(getAs(map, Presentation.NOTES, String.class, false));
 
-        Integer accountId = getAs(map, ACCOUNT_ID, Integer.class);
+        Integer accountId = getAs(map, Widget.ACCOUNT_ID, Integer.class);
         if(accountId != null)
             builder = builder.accountId(accountId);
 
-        Object layout = map.get(LAYOUT);
+        Object layout = map.get(Widget.LAYOUT);
         if(layout instanceof Map)
             builder = builder.layout(getLayout((Map<String,Object>)layout));
         else if(layout instanceof List)
@@ -562,19 +522,19 @@ public class DashboardParser
     {
         Layout.Builder builder = Layout.builder();
 
-        Integer row = getAs(map, ROW, Integer.class);
+        Integer row = getAs(map, Layout.ROW, Integer.class);
         if(row != null)
             builder = builder.row(row);
 
-        Integer column = getAs(map, COLUMN, Integer.class);
+        Integer column = getAs(map, Layout.COLUMN, Integer.class);
         if(column != null)
             builder = builder.column(column);
 
-        Integer width = getAs(map, WIDTH, Integer.class, false);
+        Integer width = getAs(map, Layout.WIDTH, Integer.class, false);
         if(width != null)
             builder = builder.width(width);
 
-        Integer height = getAs(map, HEIGHT, Integer.class, false);
+        Integer height = getAs(map, Layout.HEIGHT, Integer.class, false);
         if(height != null)
             builder = builder.height(height);
 

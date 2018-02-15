@@ -28,6 +28,7 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.apache.commons.lang3.StringUtils;
 import com.opsmatters.core.util.FormatUtilities;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
+import com.opsmatters.newrelic.api.model.insights.Metadata;
 import com.opsmatters.newrelic.api.model.insights.Filter;
 import com.opsmatters.newrelic.api.model.insights.widgets.Widget;
 import com.opsmatters.newrelic.api.model.insights.widgets.EventChart;
@@ -60,52 +61,6 @@ import com.opsmatters.newrelic.api.model.metrics.Metric;
 public class DashboardRenderer
 {
     private static final Logger logger = Logger.getLogger(DashboardRenderer.class.getName());
-
- //GERALD: move out
-   // The field names
-    public static final String TITLE = "title";
-    public static final String SUBTITLE = "subtitle";
-    public static final String NOTES = "notes";
-    public static final String ICON = "icon";
-    public static final String VERSION = "version";
-    public static final String VISIBILITY = "visibility";
-    public static final String EDITABLE = "editable";
-    public static final String FILTER = "filter";
-    public static final String EVENT_TYPES = "event_types";
-    public static final String ATTRIBUTES = "attributes";
-    public static final String WIDGETS = "widgets";
-    public static final String VISUALIZATION = "visualization";
-    public static final String ACCOUNT_ID = "account_id";
-    public static final String DATA = "data";
-    public static final String NRQL = "nrql";
-    public static final String SOURCE = "source";
-    public static final String SOURCES = "sources";
-    public static final String DRILLDOWN_DASHBOARD_ID = "drilldown_dashboard_id";
-    public static final String THRESHOLD = "threshold";
-    public static final String DURATION = "duration";
-    public static final String METRICS = "metrics";
-    public static final String ENTITY_IDS = "entity_ids";
-    public static final String END_TIME = "end_time";
-    public static final String ORDER_BY = "order_by";
-    public static final String LIMIT = "limit";
-    public static final String FILTERS = "filters";
-    public static final String ID = "id";
-    public static final String RED = "red";
-    public static final String YELLOW = "yellow";
-    public static final String NAME = "name";
-    public static final String UNITS = "units";
-    public static final String SCOPE = "scope";
-    public static final String VALUES = "values";
-    public static final String TRAFFIC_LIGHT = "traffic_light";
-    public static final String STATES = "states";
-    public static final String TYPE = "type";
-    public static final String MIN = "min";
-    public static final String MAX = "max";
-    public static final String LAYOUT = "layout";
-    public static final String ROW = "row";
-    public static final String COLUMN = "column";
-    public static final String WIDTH = "width";
-    public static final String HEIGHT = "height";
 
     private DumperOptions options = new DumperOptions();
     private boolean banner = false;
@@ -276,12 +231,12 @@ public class DashboardRenderer
     private Map<String,Object> toMap(Dashboard dashboard)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, ICON, dashboard.getIcon());
-        putAs(ret, VERSION, dashboard.getMetadata() != null, dashboard.getMetadata().getVersion());
-        putAs(ret, VISIBILITY, dashboard.getVisibility());
-        putAs(ret, EDITABLE, dashboard.getEditable());
-        putAs(ret, WIDGETS, dashboard.getWidgets() != null, toWidgetMap(dashboard.getWidgets()));
-        putAs(ret, FILTER, dashboard.getFilter() != null, toMap(dashboard.getFilter()));
+        putAs(ret, Dashboard.ICON, dashboard.getIcon());
+        putAs(ret, Metadata.VERSION, dashboard.getMetadata() != null, dashboard.getMetadata().getVersion());
+        putAs(ret, Dashboard.VISIBILITY, dashboard.getVisibility());
+        putAs(ret, Dashboard.EDITABLE, dashboard.getEditable());
+        putAs(ret, Dashboard.WIDGETS, dashboard.getWidgets() != null, toWidgetMap(dashboard.getWidgets()));
+        putAs(ret, Dashboard.FILTER, dashboard.getFilter() != null, toMap(dashboard.getFilter()));
         return ret;
     }
 
@@ -293,8 +248,8 @@ public class DashboardRenderer
     private Map<String,Object> toMap(Filter filter)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, EVENT_TYPES, filter.getEventTypes());
-        putAs(ret, ATTRIBUTES, filter.getAttributes());
+        putAs(ret, Filter.EVENT_TYPES, filter.getEventTypes());
+        putAs(ret, Filter.ATTRIBUTES, filter.getAttributes());
         return ret;
     }
 
@@ -348,7 +303,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
         return ret;
     }
 
@@ -362,7 +317,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((MetricsData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((MetricsData)widget.getData().get(0)));
         return ret;
     }
 
@@ -376,7 +331,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
         return ret;
     }
 
@@ -390,7 +345,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((InventoryData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((InventoryData)widget.getData().get(0)));
         return ret;
     }
 
@@ -404,7 +359,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((MetricsData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((MetricsData)widget.getData().get(0)));
         return ret;
     }
 
@@ -418,7 +373,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
         return ret;
     }
 
@@ -432,7 +387,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((EventsData)widget.getData().get(0)));
         return ret;
     }
 
@@ -446,7 +401,7 @@ public class DashboardRenderer
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         addWidgetFields(ret, widget);
         if(widget.getData() != null)
-            putAs(ret, DATA, widget.getData().size() > 0, toMap((MarkdownData)widget.getData().get(0)));
+            putAs(ret, Widget.DATA, widget.getData().size() > 0, toMap((MarkdownData)widget.getData().get(0)));
         return ret;
     }
 
@@ -458,7 +413,7 @@ public class DashboardRenderer
     private Map<String,Object> toMap(EventsData data)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, NRQL, data.getNrql() != null, data.getNrql());
+        putAs(ret, EventsData.NRQL, data.getNrql() != null, data.getNrql());
         return ret;
     }
 
@@ -470,12 +425,12 @@ public class DashboardRenderer
     private Map<String,Object> toMap(MetricsData data)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, DURATION, data.getDuration() != null, data.getDuration());
-        putAs(ret, END_TIME, data.getEndTime() != null, data.getEndTime());
-        putAs(ret, ENTITY_IDS, data.getEntityIds() != null, data.getEntityIds());
-        putAs(ret, METRICS, data.getMetrics() != null, toMetricList(data.getMetrics()));
-        putAs(ret, ORDER_BY, data.getOrderBy() != null, data.getOrderBy());
-        putAs(ret, LIMIT, data.getLimit() != null, data.getLimit());
+        putAs(ret, MetricsData.DURATION, data.getDuration() != null, data.getDuration());
+        putAs(ret, MetricsData.END_TIME, data.getEndTime() != null, data.getEndTime());
+        putAs(ret, MetricsData.ENTITY_IDS, data.getEntityIds() != null, data.getEntityIds());
+        putAs(ret, MetricsData.METRICS, data.getMetrics() != null, toMetricList(data.getMetrics()));
+        putAs(ret, MetricsData.ORDER_BY, data.getOrderBy() != null, data.getOrderBy());
+        putAs(ret, MetricsData.LIMIT, data.getLimit() != null, data.getLimit());
         return ret;
     }
 
@@ -487,8 +442,8 @@ public class DashboardRenderer
     private Map<String,Object> toMap(InventoryData data)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, SOURCES, data.getSources() != null, data.getSources());
-        putAs(ret, FILTERS, data.getFilters() != null, data.getFilters());
+        putAs(ret, InventoryData.SOURCES, data.getSources() != null, data.getSources());
+        putAs(ret, InventoryData.FILTERS, data.getFilters() != null, data.getFilters());
         return ret;
     }
 
@@ -500,7 +455,7 @@ public class DashboardRenderer
     private Map<String,Object> toMap(MarkdownData data)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, SOURCE, data.getSource() != null, data.getSource());
+        putAs(ret, MarkdownData.SOURCE, data.getSource() != null, data.getSource());
         return ret;
     }
 
@@ -511,11 +466,11 @@ public class DashboardRenderer
      */
     private void addWidgetFields(Map<String,Object> map, Widget widget)
     {
-        putAs(map, VISUALIZATION, widget.getVisualization());
+        putAs(map, Widget.VISUALIZATION, widget.getVisualization());
         if(widget.getPresentation() != null)
             addPresentationFields(map, widget.getPresentation());
-        putAs(map, LAYOUT, widget.getLayout() != null, toMap(widget.getLayout()));
-        putAs(map, ACCOUNT_ID, widget.getAccountId());
+        putAs(map, Widget.LAYOUT, widget.getLayout() != null, toMap(widget.getLayout()));
+        putAs(map, Widget.ACCOUNT_ID, widget.getAccountId());
     }
 
     /**
@@ -525,7 +480,7 @@ public class DashboardRenderer
      */
     private void addPresentationFields(Map<String,Object> map, Presentation presentation)
     {
-        putAs(map, NOTES, presentation.getNotes() != null, presentation.getNotes());
+        putAs(map, Presentation.NOTES, presentation.getNotes() != null, presentation.getNotes());
         if(presentation instanceof DrilldownPresentation)
             addPresentationFields(map, (DrilldownPresentation)presentation);
         else if(presentation instanceof ThresholdPresentation)
@@ -541,7 +496,7 @@ public class DashboardRenderer
      */
     private void addPresentationFields(Map<String,Object> map, DrilldownPresentation presentation)
     {
-        putAs(map, DRILLDOWN_DASHBOARD_ID, presentation.getDrilldownDashboardId() != null, presentation.getDrilldownDashboardId());
+        putAs(map, DrilldownPresentation.DRILLDOWN_DASHBOARD_ID, presentation.getDrilldownDashboardId() != null, presentation.getDrilldownDashboardId());
     }
 
     /**
@@ -551,7 +506,7 @@ public class DashboardRenderer
      */
     private void addPresentationFields(Map<String,Object> map, ThresholdPresentation presentation)
     {
-        putAs(map, THRESHOLD, presentation.getThreshold() != null, toMap(presentation.getThreshold()));
+        putAs(map, ThresholdPresentation.THRESHOLD, presentation.getThreshold() != null, toMap(presentation.getThreshold()));
     }
 
     /**
@@ -565,7 +520,7 @@ public class DashboardRenderer
         if(trafficLights != null)
         {
             for(TrafficLight trafficLight : trafficLights)
-                putAs(map, TRAFFIC_LIGHT, trafficLight != null, toMap(trafficLight));
+                putAs(map, TrafficLightPresentation.TRAFFIC_LIGHT, trafficLight != null, toMap(trafficLight));
         }
     }
 
@@ -577,8 +532,8 @@ public class DashboardRenderer
     private Map<String,Object> toMap(Threshold threshold)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, RED, threshold.getRed());
-        putAs(ret, YELLOW, threshold.getYellow());
+        putAs(ret, Threshold.RED, threshold.getRed());
+        putAs(ret, Threshold.YELLOW, threshold.getYellow());
         return ret;
     }
 
@@ -590,10 +545,10 @@ public class DashboardRenderer
     private Map<String,Object> toMap(TrafficLight trafficLight)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, ID, trafficLight.getId());
-        putAs(ret, TITLE, trafficLight.getTitle());
-        putAs(ret, SUBTITLE, trafficLight.getSubtitle());
-        putAs(ret, STATES, trafficLight.getStates() != null, toStateList(trafficLight.getStates()));
+        putAs(ret, TrafficLight.ID, trafficLight.getId());
+        putAs(ret, TrafficLight.TITLE, trafficLight.getTitle());
+        putAs(ret, TrafficLight.SUBTITLE, trafficLight.getSubtitle());
+        putAs(ret, TrafficLight.STATES, trafficLight.getStates() != null, toStateList(trafficLight.getStates()));
 
         return ret;
     }
@@ -624,9 +579,9 @@ public class DashboardRenderer
     private Map<String,Object> toMap(TrafficLightState state)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, TYPE, state.getType() != null, state.getType());
-        putAs(ret, MIN, state.getMin() != null, state.getMin());
-        putAs(ret, MAX, state.getMax() != null, state.getMax());
+        putAs(ret, TrafficLightState.TYPE, state.getType() != null, state.getType());
+        putAs(ret, TrafficLightState.MIN, state.getMin() != null, state.getMin());
+        putAs(ret, TrafficLightState.MAX, state.getMax() != null, state.getMax());
         return ret;
     }
 
@@ -656,10 +611,10 @@ public class DashboardRenderer
     private Map<String,Object> toMap(Metric metric)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, NAME, metric.getName() != null, metric.getName());
-        putAs(ret, UNITS, metric.getUnits() != null, metric.getUnits());
-        putAs(ret, SCOPE, metric.getScope() != null, metric.getScope());
-        putAs(ret, VALUES, metric.getValues() != null, metric.getValues());
+        putAs(ret, Metric.NAME, metric.getName() != null, metric.getName());
+        putAs(ret, Metric.UNITS, metric.getUnits() != null, metric.getUnits());
+        putAs(ret, Metric.SCOPE, metric.getScope() != null, metric.getScope());
+        putAs(ret, Metric.VALUES, metric.getValues() != null, metric.getValues());
         return ret;
     }
 
@@ -671,10 +626,10 @@ public class DashboardRenderer
     private Map<String,Object> toMap(Layout layout)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        putAs(ret, ROW, layout.getRow());
-        putAs(ret, COLUMN, layout.getColumn());
-        putAs(ret, WIDTH, layout.getWidth());
-        putAs(ret, HEIGHT, layout.getHeight());
+        putAs(ret, Layout.ROW, layout.getRow());
+        putAs(ret, Layout.COLUMN, layout.getColumn());
+        putAs(ret, Layout.WIDTH, layout.getWidth());
+        putAs(ret, Layout.HEIGHT, layout.getHeight());
         return ret;
     }
 
