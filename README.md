@@ -20,7 +20,7 @@ DashboardConfiguration config = new DashboardConfiguration();
 Next, load a file containing dashboards in YAML format into the dashboard configuration:
 ```
 Reader reader = new FileReader("dashboards.yml");
-config.setDashboards(DashboardParser.fromYaml(reader));
+config.setDashboards(DashboardParser.parseYaml(reader));
 reader.close();
 ```
 To carry out operations on the dashboards in the dashboard configuration, first create a manager:
@@ -29,16 +29,22 @@ DashboardManager manager = new DashboardManager("YOUR_API_KEY");
 ```
 To create the dashboards in the dashboard configuration in New Relic:
 ```
-List<Dashboard> created = manager.create(config);
+List<Dashboard> created = manager.createDashboards(config.getDashboards());
 ```
 Alternatively, to delete the dashboards in the dashboard configuration from New Relic:
 ```
-List<Dashboard> deleted = manager.delete(config);
+List<Dashboard> deleted = manager.deleteDashboards(config.getDashboards());
 ```
-Finally, to output a set of dashboards to a YAML file, including a banner:
+Finally, to output a set of dashboards to a YAML file:
 ```
 Writer writer = new FileWriter("new_dashboards.yml");
-DashboardParser.toYaml(config.getDashboards(), writer, "My Dashboards");
+DashboardRenderer.toYaml(dashboards, writer);
+writer.close();
+```
+Similarly, to output with a banner:
+```
+Writer writer = new FileWriter("new_dashboards.yml");
+DashboardRenderer.builder().withBanner(true).title(OUTPUT_FILENAME).build().renderYaml(dashboards, writer);
 writer.close();
 ```
 An example YAML file containing multiple dashboards and widgets can be found in the [tests](src/test/resources/test-dashboards.yml).

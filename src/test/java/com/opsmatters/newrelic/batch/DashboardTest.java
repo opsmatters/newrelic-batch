@@ -29,6 +29,7 @@ import junit.framework.Assert;
 import com.opsmatters.newrelic.api.Constants;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
 import com.opsmatters.newrelic.batch.parsers.DashboardParser;
+import com.opsmatters.newrelic.batch.renderers.DashboardRenderer;
 import com.opsmatters.newrelic.batch.model.DashboardConfiguration;
 
 /**
@@ -61,7 +62,7 @@ public class DashboardTest
         try
         {
             reader = new FileReader(PATH+INPUT_FILENAME);
-            config.setDashboards(DashboardParser.fromYaml(reader));
+            config.setDashboards(DashboardParser.parseYaml(reader));
         }
         catch(FileNotFoundException e)
         {
@@ -89,11 +90,11 @@ public class DashboardTest
         DashboardManager manager = new DashboardManager(apiKey);
 
         // Delete the existing dashboards
-        List<Dashboard> deleted = manager.delete(config);
+        List<Dashboard> deleted = manager.deleteDashboards(config.getDashboards());
         Assert.assertTrue(deleted.size() == dashboards.size());
 
         // Create the new dashboards
-        List<Dashboard> created = manager.create(config);
+        List<Dashboard> created = manager.createDashboards(config.getDashboards());
         Assert.assertTrue(created.size() == dashboards.size());
 
         // Write the new dashboards to a new filename
@@ -102,7 +103,7 @@ public class DashboardTest
         try
         {
             writer = new FileWriter(PATH+OUTPUT_FILENAME);
-            DashboardParser.toYaml(dashboards, writer, OUTPUT_FILENAME);
+            DashboardRenderer.builder().withBanner(true).title(OUTPUT_FILENAME).build().renderYaml(dashboards, writer);
         }
         catch(IOException e)
         {

@@ -22,10 +22,9 @@ import java.util.Collection;
 import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
-import com.opsmatters.newrelic.batch.model.DashboardConfiguration;
 
 /**
- * Manager of a dashboard configuration.
+ * Manager of operations on dashboards.
  * 
  * @author Gerald Curley (opsmatters)
  */
@@ -91,14 +90,14 @@ public class DashboardManager
     }
 
     /**
-     * Create the dashboards in the given configuration.
-     * @param config The dashboard configuration
+     * Creates the dashboards in the given configuration.
+     * @param dashboards The dashboards to create
      * @return The created dashboards
      */
-    public List<Dashboard> create(DashboardConfiguration config)
+    public List<Dashboard> createDashboards(List<Dashboard> dashboards)
     {
-        if(config == null)
-            throw new IllegalArgumentException("null config");
+        if(dashboards == null)
+            throw new IllegalArgumentException("null dashboards");
 
         checkInitialize();
         if(!isInitialized())
@@ -106,8 +105,8 @@ public class DashboardManager
 
         // Create the dashboards
         List<Dashboard> ret = new ArrayList<Dashboard>();
-        logger.info("Creating "+config.numDashboards()+" dashboards");
-        for(Dashboard dashboard : config.getDashboards())
+        logger.info("Creating "+dashboards+" dashboards");
+        for(Dashboard dashboard : dashboards)
         {
             logger.info("Creating dashboard: "+dashboard.getTitle());
             dashboard = apiClient.dashboards().create(dashboard).get();
@@ -123,7 +122,7 @@ public class DashboardManager
      * @param dashboard The dashboard to create
      * @return The created dashboard
      */
-    public Dashboard create(Dashboard dashboard)
+    public Dashboard createDashboard(Dashboard dashboard)
     {
         checkInitialize();
         if(!isInitialized())
@@ -139,13 +138,13 @@ public class DashboardManager
 
     /**
      * Delete the dashboards in the given configuration.
-     * @param config The dashboard configuration
+     * @param dashboards The dashboards to delete
      * @return The deleted dashboards
      */
-    public List<Dashboard> delete(DashboardConfiguration config)
+    public List<Dashboard> deleteDashboards(List<Dashboard> dashboards)
     {
-        if(config == null)
-            throw new IllegalArgumentException("null config");
+        if(dashboards == null)
+            throw new IllegalArgumentException("null dashboards");
 
         checkInitialize();
         if(!isInitialized())
@@ -153,7 +152,7 @@ public class DashboardManager
 
         // Delete the dashboards
         List<Dashboard> ret = new ArrayList<Dashboard>();
-        for(Dashboard dashboard : config.getDashboards())
+        for(Dashboard dashboard : dashboards)
         {
             deleteDashboards(dashboard.getTitle());
             ret.add(dashboard);
@@ -167,7 +166,7 @@ public class DashboardManager
      * @param dashboard The dashboard to delete
      * @return The deleted dashboard
      */
-    public Dashboard delete(Dashboard dashboard)
+    public Dashboard deleteDashboard(Dashboard dashboard)
     {
         checkInitialize();
         if(!isInitialized())
