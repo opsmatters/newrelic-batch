@@ -66,7 +66,7 @@ public class DashboardParser
     }
 
     /**
-     * Reads the dashboards configuration from the given string.
+     * Reads the dashboards from the given string.
      * @param contents The contents of the file as a YAML string
      * @return The dashboards read from the YAML string
      */
@@ -76,7 +76,7 @@ public class DashboardParser
     }
 
     /**
-     * Reads the dashboards configuration from the given reader.
+     * Reads the dashboards from the given reader.
      * @param reader The reader used to read the YAML string
      * @return The dashboards read from the YAML string
      */
@@ -86,8 +86,8 @@ public class DashboardParser
     }
 
     /**
-     * Reads the dashboards configuration from the given object.
-     * @param o The dashboard configuration as a map
+     * Reads the dashboards from the given object.
+     * @param o The dashboards as a map
      * @return The dashboards read from the map
      */
     private List<Dashboard> getDashboards(Object o)
@@ -114,7 +114,7 @@ public class DashboardParser
     }
 
     /**
-     * Creates a dashboard configuration from the given map.
+     * Creates a dashboard from the given map.
      * @param title The title of the dashboard
      * @param map The configuration properties
      * @return The dashboard
@@ -166,7 +166,7 @@ public class DashboardParser
     }
 
     /**
-     * Creates a widget configuration from the given map.
+     * Creates a widget from the given map.
      * @param title The title of the widget
      * @param map The configuration properties
      * @return The widget

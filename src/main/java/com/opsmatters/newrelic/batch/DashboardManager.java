@@ -90,7 +90,7 @@ public class DashboardManager
     }
 
     /**
-     * Creates the dashboards in the given configuration.
+     * Creates the given dashboards.
      * @param dashboards The dashboards to create
      * @return The created dashboards
      */
@@ -137,7 +137,7 @@ public class DashboardManager
     }
 
     /**
-     * Delete the dashboards in the given configuration.
+     * Delete the given dashboard.
      * @param dashboards The dashboards to delete
      * @return The deleted dashboards
      */
