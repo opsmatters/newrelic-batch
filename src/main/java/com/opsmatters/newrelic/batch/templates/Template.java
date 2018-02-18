@@ -16,8 +16,6 @@
 
 package com.opsmatters.newrelic.batch.templates;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -30,12 +28,13 @@ public abstract class Template
 {
     public static final TemplateColumn TYPE = new TemplateColumn("type", "Type", true);
 
-    private static Map<String,TemplateColumn> columns = new LinkedHashMap<String,TemplateColumn>();
-    private List<String> headers = new ArrayList<String>();
+    private Map<String,TemplateColumn> columns = new LinkedHashMap<String,TemplateColumn>();
 
-    static
+    /**
+     * Default constructor.
+     */
+    public Template()
     {
-        addColumn(TYPE);
     }
 
     /**
@@ -45,22 +44,19 @@ public abstract class Template
     public abstract String getType();
 
     /**
-     * Sets the headers for the template.
-     * @param headers The headers of the input file
-     * @return This object
+     * Returns the template columns.
+     * @return The template columns
      */
-    public Template headers(String[] headers)
+    public Map<String,TemplateColumn> getColumns()
     {
-        for(String header : headers)
-            this.headers.add(header);
-        return this;
+        return columns;
     }
 
     /**
      * Adds the given column to the columns for this template.
      * @param column The column to add
      */
-    public static void addColumn(TemplateColumn column)
+    public void addColumn(TemplateColumn column)
     {
         columns.put(column.getName(), column);
     }
@@ -70,65 +66,31 @@ public abstract class Template
      * @param name The name of the column to return
      * @return The column for the given name
      */
-    public static TemplateColumn getColumn(String name)
+    public TemplateColumn getColumn(String name)
     {
         return columns.get(name);
     }
 
     /**
-     * Checks the headers to see if there are any missing mandatory columns.
-     * @throws IllegalStateException if there is a missing mandatory column
+     * Returns the template column headers.
+     * @return The template column headers
      */
-    public void checkColumns()
+    public String[] getHeaders()
     {
-        if(columns.size() == 0)
-            throw new IllegalStateException("columns missing");
-
+        int i = 0;
+        String[] ret = new String[columns.size()];
         for(TemplateColumn column : columns.values())
-        {
-            if(getIndex(column) == -1 && column.isMandatory())
-                throw new IllegalStateException("missing mandatory column: "+column.getName());
-        }
+            ret[i++] = column.getHeader();
+        return ret;
     }
 
     /**
-     * Returns the index of the given column.
-     * @param column The column of the line
-     * @return The index of the given column
+     * Returns an instance of this template, with headers.
+     * @param headers The headers of the input file
+     * @return The template created
      */
-    protected int getIndex(TemplateColumn column)
+    public TemplateInstance getInstance(String[] headers)
     {
-        return headers.indexOf(column.getHeader());
-    }
-
-    /**
-     * Returns the value of the "Type" column in the given line.
-     * @param line The line of the file
-     * @return The value of the "Type" column from the line
-     */
-    public String getType(String[] line)
-    {
-        return line[getIndex(TYPE)];
-    }
-
-    /**
-     * Returns <CODE>true</CODE> if the the "Type" column of the given line matches the type of the template.
-     * @param line The line of the file
-     * @return <CODE>true</CODE> if the the "Type" column of the given line matches the type of the template
-     */
-    public boolean matches(String[] line)
-    {
-        return getType().equals(getType(line));
-    }
-
-    /**
-     * Returns the string value of the given column in the given line.
-     * @param name The name of the column
-     * @param line The line of the file
-     * @return The value of the column from the line
-     */
-    public String getStringValue(String name, String[] line)
-    {
-        return line[getIndex(getColumn(name))];
-    }
+        return new TemplateInstance(this, headers);
+    }  
 }

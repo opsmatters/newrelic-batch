@@ -18,19 +18,19 @@ package com.opsmatters.newrelic.batch.parsers;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.reports.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.batch.templates.Template;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
+import com.opsmatters.newrelic.batch.templates.TemplateInstance;
 
 /**
  * Parser that converts alert policies from report rows.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertPolicyParser
+public class AlertPolicyParser extends InputFileParser<AlertPolicy>
 {
     private static final Logger logger = Logger.getLogger(AlertPolicyParser.class.getName());
 
@@ -42,12 +42,12 @@ public class AlertPolicyParser
     }
 
     /**
-     * Register this class with the given template class.
-     * @param templateClass The template class
+     * Register this class with the given template.
+     * @param template The template to register with this class
      */
-    public static void registerWith(Class templateClass)
+    public static void registerTemplate(Template template)
     {
-        TemplateFactory.registerTemplate(AlertPolicyParser.class, templateClass);
+        TemplateFactory.registerTemplate(AlertPolicyParser.class, template);
     }
 
     /**
@@ -58,7 +58,7 @@ public class AlertPolicyParser
      */
     public static List<AlertPolicy> parse(String[] headers, List<String[]> lines)
     {
-        return new AlertPolicyParser().getAlertPolicies(headers, lines);
+        return new AlertPolicyParser().get(headers, lines);
     }
 
     /**
@@ -74,34 +74,16 @@ public class AlertPolicyParser
     }
 
     /**
-     * Reads the alert policies from the given lines.
-     * @param headers The headers of the file
-     * @param lines The input file lines
-     * @return The alert policies read from the lines
+     * Reads the alert policy from the given line.
+     * @param template The template with the columns
+     * @param line The input file line
+     * @return The alert policy created
      */
-    private List<AlertPolicy> getAlertPolicies(String[] headers, List<String[]> lines)
+    protected AlertPolicy create(TemplateInstance template, String[] line)
     {
-        List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
-        Template template = TemplateFactory.getTemplate(getClass()).headers(headers);
-        logger.info("Processing alert policies: headers="+headers.length+" lines="+lines.size());
-
-        template.checkColumns();
-        for(String[] line : lines)
-        {
-            // Check that the line matches the template type
-            if(!template.matches(line))
-            {
-                logger.severe("found illegal line in "+template.getType()+" file: "+template.getType(line));
-                continue;
-            }
-
-            AlertPolicy policy = AlertPolicy.builder()
-                .name(template.getStringValue(AlertPolicy.NAME, line))
-                .incidentPreference(template.getStringValue(AlertPolicy.INCIDENT_PREFERENCE, line))
-                .build();
-            ret.add(policy);
-        }
-
-        return ret;
+        return AlertPolicy.builder()
+            .name(template.getString(AlertPolicy.NAME, line))
+            .incidentPreference(template.getString(AlertPolicy.INCIDENT_PREFERENCE, line))
+            .build();
     }
 }

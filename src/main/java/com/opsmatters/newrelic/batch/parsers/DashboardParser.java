@@ -54,7 +54,7 @@ import com.opsmatters.newrelic.api.model.metrics.Metric;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class DashboardParser
+public class DashboardParser extends BaseParser
 {
     private static final Logger logger = Logger.getLogger(DashboardParser.class.getName());
 
@@ -554,69 +554,5 @@ public class DashboardParser
         if(list.size() >= 4)
             builder = builder.size(list.get(2), list.get(3));
         return builder.build();
-    }
-
-    /**
-     * Reads a value from the given map and coerces it to the given class.
-     * @param map The map to read the value from
-     * @param name The name of the property
-     * @param target The target class of the returned value
-     * @return The value of the property from the map
-     */
-    @SuppressWarnings("unchecked")
-    private <E> E getAs(Map<String,Object> map, String name, Class<E> target) 
-        throws IllegalArgumentException
-    {
-        return getAs(map, name, target, true);
-    }
-
-    /**
-     * Reads a value from the given map and coerces it to the given class.
-     * @param map The map to read the value from
-     * @param name The name of the property
-     * @param target The target class of the returned value
-     * @param mandatory <CODE>true</CODE> if the field cannot be null
-     * @return The value of the property from the map
-     */
-    @SuppressWarnings("unchecked")
-    private <E> E getAs(Map<String,Object> map, String name, Class<E> target, boolean mandatory) 
-        throws IllegalArgumentException
-    {
-        E ret = null;
-
-        Object value = map.get(name);
-        if(value != null)
-        {
-            ret = coerceTo(name, value, target);
-        }
-        else if(mandatory)
-        {
-            throw new IllegalArgumentException(name+": expected "+target.getName()
-                +" but was missing");
-        }
-
-        return ret;
-    }
-
-    /**
-     * Coerce the value to the given class.
-     * @param name The name of the property
-     * @param value The value to coerce
-     * @param target The target class of the returned value
-     * @return The value 
-     */
-    @SuppressWarnings("unchecked")
-    private <E> E coerceTo(String name, Object value, Class<E> target) 
-        throws IllegalArgumentException
-    {
-        E ret = null;
-
-        if(target.isInstance(value))
-            ret = (E)value;
-        else if(value != null)
-            throw new IllegalArgumentException(name+": expected "+target.getName()
-                +" but was "+value.getClass().getName());
-
-        return ret;
     }
 }

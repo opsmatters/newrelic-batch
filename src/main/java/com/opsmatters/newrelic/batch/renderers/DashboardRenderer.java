@@ -130,17 +130,17 @@ public class DashboardRenderer
     }
 
     /**
-     * Writes the dashboards configuration to a YAML string.
+     * Writes the given dashboards to a YAML string.
      * @param dashboards The dashboards to be serialized
      * @return The dashboards as a YAML string
      */
-    public static String toYaml(List<Dashboard> dashboards)
+    public static String writeYaml(List<Dashboard> dashboards)
     {
         return new DashboardRenderer().renderYaml(dashboards);
     }
 
     /**
-     * Writes the dashboards configuration to a YAML string.
+     * Writes the given dashboards to a YAML string.
      * @param dashboards The dashboards to be serialized
      * @return The dashboards as a YAML string
      */
@@ -157,7 +157,7 @@ public class DashboardRenderer
     }
 
     /**
-     * Writes the dashboards configuration to a writer.
+     * Writes the given dashboards to a writer.
      * @param dashboards The dashboards to be serialized
      * @param writer The writer to use to serialize the dashboards
      */
@@ -167,7 +167,7 @@ public class DashboardRenderer
     }
 
     /**
-     * Writes the dashboards configuration to a writer.
+     * Writes the given dashboards to a writer.
      * @param dashboards The dashboards to be serialized
      * @param writer The writer to use to serialize the dashboards
      */

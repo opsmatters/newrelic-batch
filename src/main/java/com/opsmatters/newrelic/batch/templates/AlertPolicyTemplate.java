@@ -30,20 +30,18 @@ public class AlertPolicyTemplate extends Template
      */
     public static final String TYPE = "alert-policy";
 
-    public static final TemplateColumn NAME = new TemplateColumn(AlertPolicy.NAME, "Name", true);
-    public static final TemplateColumn INCIDENT_PREFERENCE = new TemplateColumn(AlertPolicy.INCIDENT_PREFERENCE, "Incident Preference", true);
-
-    static
-    {
-        addColumn(NAME);
-        addColumn(INCIDENT_PREFERENCE);
-    }
+    // The template columns
+    public TemplateColumn NAME = new TemplateColumn(AlertPolicy.NAME, "Name", true);
+    public TemplateColumn INCIDENT_PREFERENCE = new TemplateColumn(AlertPolicy.INCIDENT_PREFERENCE, "Incident Preference", true, "PER_POLICY");
 
     /**
      * Default constructor.
      */
     public AlertPolicyTemplate()
     {
+        addColumn(NAME);
+        addColumn(Template.TYPE);
+        addColumn(INCIDENT_PREFERENCE);
     }
 
     /**

@@ -141,7 +141,7 @@ public class AlertManager
      * @param policies The alert policies to delete
      * @return The deleted alert policies
      */
-    public List<AlertPolicy> deletePolicies(List<AlertPolicy> policies)
+    public List<AlertPolicy> deleteAlertPolicies(List<AlertPolicy> policies)
     {
         if(policies == null)
             throw new IllegalArgumentException("null policies");

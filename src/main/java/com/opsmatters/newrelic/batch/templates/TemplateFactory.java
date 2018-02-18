@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.logging.Logger;
 import com.opsmatters.newrelic.batch.parsers.*;
+import com.opsmatters.newrelic.batch.renderers.*;
 
 /**
  * Represents the factory to create templates.
@@ -30,12 +31,13 @@ public class TemplateFactory
 {
     private static final Logger logger = Logger.getLogger(TemplateFactory.class.getName());
 
-    private static final Map<Class,Class> templates = new HashMap<Class,Class>();
+    private static final Map<Class,Template> templates = new HashMap<Class,Template>();
 
     static
     {
         // Register each of the parsers and renderers with the appropriate template
-        AlertPolicyParser.registerWith(AlertPolicyTemplate.class);
+        AlertPolicyParser.registerTemplate(new AlertPolicyTemplate());
+        AlertPolicyRenderer.registerTemplate(new AlertPolicyTemplate());
     }
 
     /**
@@ -46,40 +48,25 @@ public class TemplateFactory
     }
 
     /**
-     * Register the given object with the given template class.
+     * Register the given object with the given template.
      * @param c The class to be registered with the template
-     * @param templateClass The template class
+     * @param template The template to register the class with
      */
-    public static void registerTemplate(Class c, Class templateClass)
+    public static void registerTemplate(Class c, Template template)
     {
-        templates.put(c, templateClass);
+        templates.put(c, template);
     }
 
     /**
-     * Returns a new template of the given type.
+     * Returns the template for the given class.
      * @param c The class of the object for the template
-     * @return The template created
+     * @return The template for the class
      */
     public static Template getTemplate(Class c)
     {
-        Class templateClass = templates.get(c);
-        if(templateClass == null)
+        Template ret = templates.get(c);
+        if(ret == null)
             throw new IllegalArgumentException("not a valid template type");
-
-        Template ret = null;
-        try
-        {
-            ret = (Template)templateClass.newInstance();
-        }
-        catch(InstantiationException e)
-        {
-            logger.severe("Unable to create template: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(IllegalAccessException e)
-        {
-            logger.severe("Unable to access template: "+e.getClass().getName()+": "+e.getMessage());
-        }
-
         return ret;
     }  
 }

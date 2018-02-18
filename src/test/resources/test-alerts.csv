@@ -1,0 +1,2 @@
+Alert Policy,Type,Name
+"test-policy	",infra-metric,disk-used-percent

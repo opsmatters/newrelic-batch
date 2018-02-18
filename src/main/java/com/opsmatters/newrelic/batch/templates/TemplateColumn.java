@@ -26,13 +26,7 @@ public class TemplateColumn
     private String name;
     private String header;
     private boolean mandatory = false;
-
-    /**
-     * Default constructor.  
-     */
-    public TemplateColumn()
-    {
-    }
+    private String deflt;
 
     /**
      * Constructor that takes a set of column attributes.
@@ -42,9 +36,22 @@ public class TemplateColumn
      */
     TemplateColumn(String name, String header, boolean mandatory)
     {
+        this(name, header, mandatory, null);
+    }
+
+    /**
+     * Constructor that takes a set of column attributes.
+     * @param name The name of the column
+     * @param header The header name of the column
+     * @param mandatory <CODE>true</CODE> if this column is mandatory
+     * @param deflt The default value for the column if it is missing
+     */
+    TemplateColumn(String name, String header, boolean mandatory, String deflt)
+    {
         this.name = name;
         this.header = header;
         this.mandatory = mandatory;
+        this.deflt = deflt;
     }
 
     /**
@@ -72,5 +79,14 @@ public class TemplateColumn
     public boolean isMandatory()
     {
         return mandatory;
+    }
+
+    /**
+     * Returns the default value of the column.  
+     * @return The default value of the column
+     */
+    public String getDefault()
+    {
+        return deflt;
     }
 }

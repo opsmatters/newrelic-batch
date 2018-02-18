@@ -19,7 +19,7 @@ DashboardConfiguration config = new DashboardConfiguration();
 ```
 Next, load a file containing dashboards in YAML format into the dashboard configuration:
 ```
-Reader reader = new FileReader("dashboards.yml");
+Reader reader = new FileReader("path/dashboards.yml");
 config.setDashboards(DashboardParser.parseYaml(reader));
 reader.close();
 ```
@@ -27,7 +27,7 @@ To carry out operations on the dashboards in the dashboard configuration, first 
 ```
 DashboardManager manager = new DashboardManager("YOUR_API_KEY");
 ```
-To create the dashboards in the dashboard configuration in New Relic:
+To create the dashboards from the dashboard configuration in New Relic:
 ```
 List<Dashboard> created = manager.createDashboards(config.getDashboards());
 ```
@@ -37,17 +37,63 @@ List<Dashboard> deleted = manager.deleteDashboards(config.getDashboards());
 ```
 Finally, to output a set of dashboards to a YAML file:
 ```
-Writer writer = new FileWriter("new_dashboards.yml");
+Writer writer = new FileWriter("path/new_dashboards.yml");
 DashboardRenderer.toYaml(dashboards, writer);
 writer.close();
 ```
 Similarly, to output with a banner:
 ```
-Writer writer = new FileWriter("new_dashboards.yml");
+Writer writer = new FileWriter("path/new_dashboards.yml");
 DashboardRenderer.builder().withBanner(true).title(OUTPUT_FILENAME).build().renderYaml(dashboards, writer);
 writer.close();
 ```
 An example YAML file containing multiple dashboards and widgets can be found in the [tests](src/test/resources/test-dashboards.yml).
+
+### Alerts
+First create an alert configuration:
+```
+AlertConfiguration config = new AlertConfiguration();
+```
+Next, load a file containing alert policies in spreadsheet format into the alert configuration:
+```
+InputStream is = new FileInputStream("path/alerts.xlsx");
+InputFileReader reader = InputFileReader.builder()
+    .name("alerts.xlsx")
+    .worksheet("Alert Policies")
+    .withInputStream(is)
+    .build();
+config.setAlertPolicies(AlertPolicyParser.parse(reader));
+is.close();
+```
+To carry out operations on the alert policies in the alert configuration, first create a manager:
+```
+AlertManager manager = new AlertManager("YOUR_API_KEY");
+```
+To create the alert policies from the alert configuration in New Relic:
+```
+List<AlertPolicy> created = manager.createAlertPolicies(config.getAlertPolicies());
+```
+Alternatively, to delete the alert policies in the alert configuration from New Relic:
+```
+List<AlertPolicy> deleted = manager.deleteAlertPolicies(config.getAlertPolicies());
+```
+Finally, to output a set of alert policies to a spreadsheet file:
+```
+Writer writer = new FileWriter("new_dashboards.yml");
+DashboardRenderer.toYaml(dashboards, writer);
+writer.close();
+
+OutputStream os = new FileOutputStream("path/new-alerts.xlsx");
+OutputFileWriter writer = OutputFileWriter.builder()
+    .name("new-alerts.xlsx")
+    .worksheet("Alert Policies")
+    .withOutputStream(os)
+    .build();
+AlertPolicyRenderer.write(policies, writer);
+```
+An example spreadsheet file containing multiple alert policies can be found in the [tests](src/test/resources/test-alerts.xlsx).
+Note that alert policies can be imported or exported using files in either CSV, XLS or XLSX format.
+The file format is derived from the extension of the filename (either .csv, .xls or .xlsx).
 
 ## Prerequisites
 
@@ -79,6 +125,7 @@ mvn clean test
 The following tests are included:
 
 * NewRelicDashboardTest: Reads the definition of several dashboards containing multiple widgets from a YAML file and creates the dashboards in New Relic. Then exports the same dashboards to a different YAML file.
+* NewRelicAlertTest: Reads the definition of several alert policies from a spreadsheet file and creates the policies in New Relic. Then exports the same policies to a different spreadsheet file.
 
 ## Deployment
 
@@ -89,7 +136,7 @@ Add the following dependency to include the artefact within your project:
 <dependency>
   <groupId>com.opsmatters</groupId>
   <artifactId>newrelic-batch</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
