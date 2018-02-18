@@ -110,7 +110,7 @@ public class DashboardManager
         {
             logger.info("Creating dashboard: "+dashboard.getTitle());
             dashboard = apiClient.dashboards().create(dashboard).get();
-            logger.info("Created dashboard: "+dashboard.getId()+" -"+dashboard.getTitle());
+            logger.info("Created dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
             ret.add(dashboard);
         }
 
@@ -131,7 +131,7 @@ public class DashboardManager
         // Create the dashboard
         logger.info("Creating dashboard: "+dashboard.getTitle());
         dashboard = apiClient.dashboards().create(dashboard).get();
-        logger.info("Created dashboard: "+dashboard.getId()+" -"+dashboard.getTitle());
+        logger.info("Created dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
 
         return dashboard;
     }
@@ -187,9 +187,9 @@ public class DashboardManager
         Collection<Dashboard> dashboards = apiClient.dashboards().list(title);
         for(Dashboard dashboard : dashboards)
         {
-            logger.info("Deleting existing dashboard: "+dashboard.getId());
+            logger.info("Deleting dashboard: "+dashboard.getId());
             apiClient.dashboards().delete(dashboard.getId());
-            logger.info("Deleted existing dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
+            logger.info("Deleted dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
         }
     }
 }

@@ -16,32 +16,35 @@
 
 package com.opsmatters.newrelic.batch.templates;
 
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailConfiguration;
 
 /**
- * Template that defines the alert policy file format.
+ * Template that defines the email alert channel file format.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertPolicyTemplate extends Template
+public class EmailChannelTemplate extends Template
 {
     /**
      * The type of the template.  
      */
-    public static final String TYPE = "alert-policy";
+    public static final String TYPE = "email-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(AlertPolicy.NAME, "Name", true);
-    public TemplateColumn INCIDENT_PREFERENCE = new TemplateColumn(AlertPolicy.INCIDENT_PREFERENCE, "Incident Preference", false, "PER_POLICY");
+    public TemplateColumn NAME = new TemplateColumn(EmailChannel.NAME, "Name", true);
+    public TemplateColumn RECIPIENTS = new TemplateColumn(EmailConfiguration.RECIPIENTS, "Recipients", true);
+    public TemplateColumn INCLUDE_JSON_ATTACHMENT = new TemplateColumn(EmailConfiguration.INCLUDE_JSON_ATTACHMENT, "Include JSON Attachment", false, "true");
 
     /**
      * Default constructor.
      */
-    public AlertPolicyTemplate()
+    public EmailChannelTemplate()
     {
         addColumn(NAME);
         addColumn(Template.TYPE);
-        addColumn(INCIDENT_PREFERENCE);
+        addColumn(RECIPIENTS);
+        addColumn(INCLUDE_JSON_ATTACHMENT);
     }
 
     /**

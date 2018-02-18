@@ -20,24 +20,25 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import com.opsmatters.core.reports.InputFileReader;
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailConfiguration;
 import com.opsmatters.newrelic.batch.templates.Template;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 import com.opsmatters.newrelic.batch.templates.TemplateInstance;
 
 /**
- * Parser that converts alert policies from report lines.
+ * Parser that converts email alert channels from report lines.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertPolicyParser extends InputFileParser<AlertPolicy>
+public class EmailChannelParser extends InputFileParser<EmailChannel>
 {
-    private static final Logger logger = Logger.getLogger(AlertPolicyParser.class.getName());
+    private static final Logger logger = Logger.getLogger(EmailChannelParser.class.getName());
 
     /**
      * Private constructor.
      */
-    private AlertPolicyParser()
+    private EmailChannelParser()
     {
     }
 
@@ -47,43 +48,44 @@ public class AlertPolicyParser extends InputFileParser<AlertPolicy>
      */
     public static void registerTemplate(Template template)
     {
-        TemplateFactory.registerTemplate(AlertPolicyParser.class, template);
+        TemplateFactory.registerTemplate(EmailChannelParser.class, template);
     }
 
     /**
-     * Reads the alert policies from the given lines.
+     * Reads the alert channels from the given lines.
      * @param headers The headers of the file
      * @param lines The lines of the file
-     * @return The alert policies read from the lines
+     * @return The alert channels read from the lines
      */
-    public static List<AlertPolicy> parse(String[] headers, List<String[]> lines)
+    public static List<EmailChannel> parse(String[] headers, List<String[]> lines)
     {
-        return new AlertPolicyParser().get(headers, lines);
+        return new EmailChannelParser().get(headers, lines);
     }
 
     /**
-     * Reads the alert policies from the given reader.
+     * Reads the alert channels from the given reader.
      * @param reader The input stream reader used to read the lines
-     * @return The alert policies read from the lines
+     * @return The alert channels read from the lines
      * @throws IOException if there is a problem reading the input file or it does not exist
      */
-    public static List<AlertPolicy> parse(InputFileReader reader) throws IOException
+    public static List<EmailChannel> parse(InputFileReader reader) throws IOException
     {
         reader.parse();
         return parse(reader.getHeaders(), reader.getRows());
     }
 
     /**
-     * Reads the alert policy from the given line.
+     * Reads the alert channel from the given line.
      * @param template The template with the columns
      * @param line The input file line
-     * @return The alert policy created
+     * @return The alert channel created
      */
-    protected AlertPolicy create(TemplateInstance template, String[] line)
+    protected EmailChannel create(TemplateInstance template, String[] line)
     {
-        return AlertPolicy.builder()
-            .name(template.getString(AlertPolicy.NAME, line))
-            .incidentPreference(template.getString(AlertPolicy.INCIDENT_PREFERENCE, line))
+        return EmailChannel.builder()
+            .name(template.getString(EmailChannel.NAME, line))
+            .recipients(template.getString(EmailConfiguration.RECIPIENTS, line))
+            .includeJsonAttachment(template.getBoolean(EmailConfiguration.INCLUDE_JSON_ATTACHMENT, line))
             .build();
     }
 }

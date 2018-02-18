@@ -16,6 +16,7 @@
 
 package com.opsmatters.newrelic.batch;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.OutputStream;
@@ -28,11 +29,16 @@ import org.junit.Test;
 import junit.framework.Assert;
 import com.opsmatters.newrelic.api.Constants;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
+import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
+import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
 import com.opsmatters.core.reports.InputFileReader;
 import com.opsmatters.core.reports.OutputFileWriter;
+import com.opsmatters.core.reports.Workbook;
 
 /**
  * The set of tests used for importing and exporting alert channels, policies and conditions.
@@ -47,9 +53,11 @@ public class AlertsTest
     private String apiKey = System.getProperty(Constants.API_KEY_PROPERTY);
 
     private static final String INPUT_PATH = "target/test-classes/";
-    private static final String INPUT_POLICY_FILENAME = "test-alerts.xlsx";
+    private static final String INPUT_FILENAME = "test-alerts.xlsx";
     private static final String OUTPUT_PATH = "target/";
-    private static final String OUTPUT_POLICY_FILENAME = "test-alerts-new.xlsx";
+    private static final String OUTPUT_FILENAME = "test-alerts-new.xlsx";
+    private static final String ALERT_POLICY_TAB = "alert policies";
+    private static final String EMAIL_CHANNEL_TAB = "email channels";
 
     @Test
     public void testNewRelicAlerts()
@@ -59,18 +67,140 @@ public class AlertsTest
 
         AlertConfiguration config = new AlertConfiguration();
 
-        // Read the alert policy file
-        logger.info("Loading alert policy file: "+INPUT_PATH+INPUT_POLICY_FILENAME);
+        // Read the alert configuration
+        readEmailChannels(config);
+        readAlertPolicies(config);
+
+        List<AlertChannel> channels = config.getAlertChannels();
+        List<AlertPolicy> policies = config.getAlertPolicies();
+        Assert.assertTrue(config.numAlertChannels() > 0);
+        Assert.assertTrue(config.numAlertPolicies() > 0);
+
+        AlertManager manager = new AlertManager(apiKey);
+
+        // Delete the existing alert configuration
+        List<AlertChannel> deletedChannels = manager.deleteAlertChannels(config.getAlertChannels());
+        List<AlertPolicy> deletedPolicies = manager.deleteAlertPolicies(config.getAlertPolicies());
+        Assert.assertTrue(deletedChannels.size() == channels.size());
+        Assert.assertTrue(deletedPolicies.size() == policies.size());
+
+        // Create the new alert configuration
+        List<AlertChannel> createdChannels = manager.createAlertChannels(config.getAlertChannels());
+        List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
+        Assert.assertTrue(createdChannels.size() == channels.size());
+        Assert.assertTrue(createdPolicies.size() == policies.size());
+
+        // Write the alert configuration
+        writeEmailChannels(config);
+        writeAlertPolicies(config);
+
+        logger.info("Completed test: "+testName);
+    }
+
+    public Workbook getOutputWorkbook() throws IOException
+    {
+        return Workbook.getWorkbook(new File(OUTPUT_PATH, OUTPUT_FILENAME));
+    }
+
+    public void readEmailChannels(AlertConfiguration config)
+    {
+        // Read the email alert channel file
+        logger.info("Loading email alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+EMAIL_CHANNEL_TAB);
         InputStream is = null;
         try
         {
-            is = new FileInputStream(INPUT_PATH+INPUT_POLICY_FILENAME);
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
             InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_POLICY_FILENAME)
-                .worksheet("alert policies")
+                .name(INPUT_FILENAME)
+                .worksheet(EMAIL_CHANNEL_TAB)
                 .withInputStream(is)
                 .build();
-            config.setAlertPolicies(AlertPolicyParser.parse(reader));
+
+            List<EmailChannel> channels = EmailChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" email alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find email alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeEmailChannels(AlertConfiguration config)
+    {
+        List<EmailChannel> channels = config.getEmailChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing email alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+EMAIL_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(EMAIL_CHANNEL_TAB)
+                .withOutputStream(os)
+                .build();
+
+            EmailChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" email alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write email alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readAlertPolicies(AlertConfiguration config)
+    {
+        // Read the alert policy file
+        logger.info("Loading alert policy file: "+INPUT_PATH+INPUT_FILENAME+"/"+ALERT_POLICY_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(ALERT_POLICY_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<AlertPolicy> policies = AlertPolicyParser.parse(reader);
+            logger.info("Read "+policies.size()+" alert policies");
+            config.setAlertPolicies(policies);
         }
         catch(FileNotFoundException e)
         {
@@ -91,32 +221,29 @@ public class AlertsTest
             {
             }
         }
+    }
 
+    public void writeAlertPolicies(AlertConfiguration config)
+    {
         List<AlertPolicy> policies = config.getAlertPolicies();
-        Assert.assertTrue(config.numAlertPolicies() > 0);
-
-        AlertManager manager = new AlertManager(apiKey);
-
-        // Delete the existing policies
-        List<AlertPolicy> deleted = manager.deleteAlertPolicies(config.getAlertPolicies());
-        Assert.assertTrue(deleted.size() == policies.size());
-
-        // Create the new policies
-        List<AlertPolicy> created = manager.createAlertPolicies(config.getAlertPolicies());
-        Assert.assertTrue(created.size() == policies.size());
 
         // Write the new policies to a new filename
-        logger.info("Writing alert policy file: "+OUTPUT_PATH+OUTPUT_POLICY_FILENAME);
+        logger.info("Writing alert policy file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+ALERT_POLICY_TAB);
         OutputStream os = null;
+        OutputFileWriter writer = null;
         try
         {
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_POLICY_FILENAME);
-            OutputFileWriter writer = OutputFileWriter.builder()
-                .name(OUTPUT_POLICY_FILENAME)
-                .worksheet("alert policies")
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(ALERT_POLICY_TAB)
                 .withOutputStream(os)
+                .withWorkbook(workbook)
                 .build();
+
             AlertPolicyRenderer.write(policies, writer);
+            logger.info("Wrote "+policies.size()+" alert policies");
         }
         catch(IOException e)
         {
@@ -132,12 +259,12 @@ public class AlertsTest
             {
                 if(os != null)
                     os.close();
+                if(writer != null)
+                    writer.close();
             }
             catch(IOException e)
             {
             }
         }
-
-        logger.info("Completed test: "+testName);
     }
 }

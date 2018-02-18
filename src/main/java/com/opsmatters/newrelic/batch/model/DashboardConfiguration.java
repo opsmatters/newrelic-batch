@@ -50,6 +50,15 @@ public class DashboardConfiguration
     }
 
     /**
+     * Adds the given dashboards to the current set of dashboards.
+     * @param dashboards The dashboards to add
+     */
+    public void addDashboards(List<Dashboard> dashboards)
+    {
+        this.dashboards.addAll(dashboards);
+    }
+
+    /**
      * Returns the set of dashboards.
      * @return The set of dashboards
      */

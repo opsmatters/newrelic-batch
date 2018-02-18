@@ -31,6 +31,7 @@ public class TemplateInstance
 
     /**
      * Constructor that takes a set of headers.
+     * Headers are converted to  lower case to support a case-insensitive lookup of the columns.
      * @param template The template for the instance
      * @param headers The headers of the input file
      */
@@ -38,7 +39,7 @@ public class TemplateInstance
     {
         this.template = template;
         for(String header : headers)
-            this.headers.add(header);
+            this.headers.add(header.toLowerCase());
     }
 
     /**
@@ -64,13 +65,13 @@ public class TemplateInstance
     }
 
     /**
-     * Returns the index of the given column.
+     * Returns the index of the given column (ignoring the case of the headers).
      * @param column The column of the line
      * @return The index of the given column
      */
     protected int getIndex(TemplateColumn column)
     {
-        return headers.indexOf(column.getHeader());
+        return headers.indexOf(column.getHeader().toLowerCase());
     }
 
     /**
@@ -109,5 +110,16 @@ public class TemplateInstance
         if(ret == null)
             ret = column.getDefault();
         return ret;
+    }
+
+    /**
+     * Returns the boolean value of the given column in the given line.
+     * @param name The name of the column
+     * @param line The line of the file
+     * @return The value of the column from the line
+     */
+    public Boolean getBoolean(String name, String[] line)
+    {
+        return Boolean.valueOf(getString(name, line));
     }
 }

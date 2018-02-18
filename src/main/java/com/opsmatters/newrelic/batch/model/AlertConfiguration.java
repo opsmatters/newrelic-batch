@@ -20,6 +20,17 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.HipChatChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.CampfireChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.UserChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.WebhookChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 
 /**
  * Represents a set of alert policies, conditions and channels.
@@ -31,6 +42,7 @@ public class AlertConfiguration
     private static final Logger logger = Logger.getLogger(AlertConfiguration.class.getName());
 
     private List<AlertPolicy> policies = new ArrayList<AlertPolicy>();
+    private List<AlertChannel> channels = new ArrayList<AlertChannel>();
 
     /**
      * Default constructor.
@@ -46,6 +58,15 @@ public class AlertConfiguration
     public void setAlertPolicies(List<AlertPolicy> policies)
     {
         this.policies.clear();
+        this.policies.addAll(policies);
+    }
+
+    /**
+     * Adds the given alert policies to the current set of policies.
+     * @param policies The policies to add
+     */
+    public void addAlertPolicies(List<AlertPolicy> policies)
+    {
         this.policies.addAll(policies);
     }
 
@@ -68,11 +89,200 @@ public class AlertConfiguration
     }
 
     /**
+     * Replaces the alert channels with the given set of channels.
+     * @param channels The set of channels
+     */
+    public void setAlertChannels(List<? extends AlertChannel> channels)
+    {
+        this.channels.clear();
+        this.channels.addAll(channels);
+    }
+
+    /**
+     * Adds the given alert channels to the current set of channels.
+     * @param channels The channels to add
+     */
+    public void addAlertChannels(List<? extends AlertChannel> channels)
+    {
+        this.channels.addAll(channels);
+    }
+
+    /**
+     * Returns the set of alert channels.
+     * @return The set of channels
+     */
+    public List<AlertChannel> getAlertChannels()
+    {
+        return channels;
+    }
+
+    /**
+     * Returns the set of email alert channels.
+     * @return The set of email channels
+     */
+    public List<EmailChannel> getEmailChannels()
+    {
+        List<EmailChannel> channels = new ArrayList<EmailChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof EmailChannel)
+                channels.add((EmailChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of Slack alert channels.
+     * @return The set of Slack channels
+     */
+    public List<SlackChannel> getSlackChannels()
+    {
+        List<SlackChannel> channels = new ArrayList<SlackChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof SlackChannel)
+                channels.add((SlackChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of HipChat alert channels.
+     * @return The set of HipChat channels
+     */
+    public List<HipChatChannel> getHipChatChannels()
+    {
+        List<HipChatChannel> channels = new ArrayList<HipChatChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof HipChatChannel)
+                channels.add((HipChatChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of Campfire alert channels.
+     * @return The set of Campfire channels
+     */
+    public List<CampfireChannel> getCampfireChannels()
+    {
+        List<CampfireChannel> channels = new ArrayList<CampfireChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof CampfireChannel)
+                channels.add((CampfireChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of OpsGenie alert channels.
+     * @return The set of OpsGenie channels
+     */
+    public List<OpsGenieChannel> getOpsGenieChannels()
+    {
+        List<OpsGenieChannel> channels = new ArrayList<OpsGenieChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof OpsGenieChannel)
+                channels.add((OpsGenieChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of PagerDuty alert channels.
+     * @return The set of PagerDuty channels
+     */
+    public List<PagerDutyChannel> getPagerDutyChannels()
+    {
+        List<PagerDutyChannel> channels = new ArrayList<PagerDutyChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof PagerDutyChannel)
+                channels.add((PagerDutyChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of user alert channels.
+     * @return The set of user channels
+     */
+    public List<UserChannel> getUserChannels()
+    {
+        List<UserChannel> channels = new ArrayList<UserChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof UserChannel)
+                channels.add((UserChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of VictorOps alert channels.
+     * @return The set of VictorOps channels
+     */
+    public List<VictorOpsChannel> getVictorOpsChannels()
+    {
+        List<VictorOpsChannel> channels = new ArrayList<VictorOpsChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof VictorOpsChannel)
+                channels.add((VictorOpsChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of webhook alert channels.
+     * @return The set of webhook channels
+     */
+    public List<WebhookChannel> getWebhookChannels()
+    {
+        List<WebhookChannel> channels = new ArrayList<WebhookChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof WebhookChannel)
+                channels.add((WebhookChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the set of xMatters alert channels.
+     * @return The set of xMatters channels
+     */
+    public List<xMattersChannel> getxMattersChannels()
+    {
+        List<xMattersChannel> channels = new ArrayList<xMattersChannel>();
+        for(AlertChannel channel : this.channels)
+        {
+            if(channel instanceof xMattersChannel)
+                channels.add((xMattersChannel)channel);
+        }
+        return channels;
+    }
+
+    /**
+     * Returns the number of alert channels.
+     * @return The number of alert channels
+     */
+    public int numAlertChannels()
+    {
+        return channels.size();
+    }
+
+    /**
      * Returns a string representation of the object.
      */
     @Override
     public String toString()
     {
-        return "AlertConfiguration [policies="+policies.size()+"]";
+        return "AlertConfiguration [policies="+policies.size()
+            +", channels="+channels.size()
+            +"]";
     }
 }

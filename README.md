@@ -86,6 +86,8 @@ OutputFileWriter writer = OutputFileWriter.builder()
     .withOutputStream(os)
     .build();
 AlertPolicyRenderer.write(policies, writer);
+os.close();
+writer.close();
 ```
 An example spreadsheet file containing multiple alert policies can be found in the [tests](src/test/resources/test-alerts.xlsx).
 Note that alert policies can be imported or exported using files in either CSV, XLS or XLSX format.

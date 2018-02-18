@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -105,12 +106,12 @@ public class AlertManager
 
         // Create the policies
         List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
-        logger.info("Creating "+policies+" alert policies");
+        logger.info("Creating "+policies.size()+" alert policies");
         for(AlertPolicy policy : policies)
         {
             logger.info("Creating alert policy: "+policy.getName());
             policy = apiClient.alertPolicies().create(policy).get();
-            logger.info("Created alert policy: "+policy.getId()+" -"+policy.getName());
+            logger.info("Created alert policy: "+policy.getId()+" - "+policy.getName());
             ret.add(policy);
         }
 
@@ -122,7 +123,7 @@ public class AlertManager
      * @param policy The alert policy to create
      * @return The created alert policy
      */
-    public AlertPolicy createPolicy(AlertPolicy policy)
+    public AlertPolicy createAlertPolicy(AlertPolicy policy)
     {
         checkInitialize();
         if(!isInitialized())
@@ -131,7 +132,7 @@ public class AlertManager
         // Create the policy
         logger.info("Creating alert policy: "+policy.getName());
         policy = apiClient.alertPolicies().create(policy).get();
-        logger.info("Created alert policy: "+policy.getId()+" -"+policy.getName());
+        logger.info("Created alert policy: "+policy.getId()+" - "+policy.getName());
 
         return policy;
     }
@@ -187,9 +188,113 @@ public class AlertManager
         Collection<AlertPolicy> policies = apiClient.alertPolicies().list(name);
         for(AlertPolicy policy : policies)
         {
-            logger.info("Deleting existing alert policy: "+policy.getId());
+            logger.info("Deleting alert policy: "+policy.getId());
             apiClient.alertPolicies().delete(policy.getId());
-            logger.info("Deleted existing alert policy : "+policy.getId()+" - "+policy.getName());
+            logger.info("Deleted alert policy : "+policy.getId()+" - "+policy.getName());
+        }
+    }
+
+    /**
+     * Creates the given alert channels.
+     * @param channels The alert channels to create
+     * @return The created alert channels
+     */
+    public List<AlertChannel> createAlertChannels(List<AlertChannel> channels)
+    {
+        if(channels == null)
+            throw new IllegalArgumentException("null channels");
+
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Create the channels
+        List<AlertChannel> ret = new ArrayList<AlertChannel>();
+        logger.info("Creating "+channels.size()+" alert channels");
+        for(AlertChannel channel : channels)
+        {
+            logger.info("Creating alert channel: "+channel.getName());
+            channel = apiClient.alertChannels().create(channel).get();
+            logger.info("Created alert channel: "+channel.getId()+" - "+channel.getName());
+            ret.add(channel);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Create the given alert channel.
+     * @param channel The alert channel to create
+     * @return The created alert channel
+     */
+    public AlertChannel createAlertChannel(AlertChannel channel)
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Create the channel
+        logger.info("Creating alert channel: "+channel.getName());
+        channel = apiClient.alertChannels().create(channel).get();
+        logger.info("Created alert channel: "+channel.getId()+" - "+channel.getName());
+
+        return channel;
+    }
+
+    /**
+     * Delete the given alert channels.
+     * @param channels The alert channels to delete
+     * @return The deleted alert channels
+     */
+    public List<AlertChannel> deleteAlertChannels(List<AlertChannel> channels)
+    {
+        if(channels == null)
+            throw new IllegalArgumentException("null channels");
+
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Delete the channels
+        List<AlertChannel> ret = new ArrayList<AlertChannel>();
+        for(AlertChannel channel : channels)
+        {
+            deleteAlertChannels(channel.getName());
+            ret.add(channel);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Delete the given alert channel.
+     * @param channel The alert channel to delete
+     * @return The deleted alert channel
+     */
+    public AlertChannel deleteAlertChannel(AlertChannel channel)
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Delete the channel
+        deleteAlertChannels(channel.getName());
+
+        return channel;
+    }
+
+    /**
+     * Delete the alert channels with the given name.
+     * @param name The name of the alert channels
+     */
+    private void deleteAlertChannels(String name)
+    {
+        Collection<AlertChannel> channels = apiClient.alertChannels().list(name);
+        for(AlertChannel channel : channels)
+        {
+            logger.info("Deleting alert channel: "+channel.getId());
+            apiClient.alertChannels().delete(channel.getId());
+            logger.info("Deleted alert channel : "+channel.getId()+" - "+channel.getName());
         }
     }
 }

@@ -31,13 +31,18 @@ public class TemplateFactory
 {
     private static final Logger logger = Logger.getLogger(TemplateFactory.class.getName());
 
+    // The templates
     private static final Map<Class,Template> templates = new HashMap<Class,Template>();
+    private static final Template alertPolicyTemplate = new AlertPolicyTemplate();
+    private static final Template emailChannelTemplate = new EmailChannelTemplate();
 
     static
     {
         // Register each of the parsers and renderers with the appropriate template
-        AlertPolicyParser.registerTemplate(new AlertPolicyTemplate());
-        AlertPolicyRenderer.registerTemplate(new AlertPolicyTemplate());
+        AlertPolicyParser.registerTemplate(alertPolicyTemplate);
+        AlertPolicyRenderer.registerTemplate(alertPolicyTemplate);
+        EmailChannelParser.registerTemplate(emailChannelTemplate);
+        EmailChannelRenderer.registerTemplate(emailChannelTemplate);
     }
 
     /**
