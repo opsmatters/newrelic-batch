@@ -79,10 +79,6 @@ List<AlertPolicy> deleted = manager.deleteAlertPolicies(config.getAlertPolicies(
 ```
 Finally, to output a set of alert policies to a spreadsheet file:
 ```
-Writer writer = new FileWriter("new_dashboards.yml");
-DashboardRenderer.toYaml(dashboards, writer);
-writer.close();
-
 OutputStream os = new FileOutputStream("path/new-alerts.xlsx");
 OutputFileWriter writer = OutputFileWriter.builder()
     .name("new-alerts.xlsx")
