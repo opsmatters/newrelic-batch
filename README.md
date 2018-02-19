@@ -13,7 +13,7 @@ It provides a set of tools to accelerate or automate the deployment of New Relic
 ## Examples
 
 ### Dashboards
-First create a dashboard configuration:
+First create a dashboard configuration to hold the dashboards:
 ```
 DashboardConfiguration config = new DashboardConfiguration();
 ```
@@ -50,11 +50,37 @@ writer.close();
 An example YAML file containing multiple dashboards and widgets can be found in the [tests](src/test/resources/test-dashboards.yml).
 
 ### Alerts
-First create an alert configuration:
+First create an alert configuration to hold the alert channels, policies and conditions:
 ```
 AlertConfiguration config = new AlertConfiguration();
 ```
-Next, load a file containing alert policies in spreadsheet format into the alert configuration:
+Next, to load a file containing email alert channels into the alert configuration, first create a reader and then pass it to the appropriate parser:
+```
+InputStream is = new FileInputStream("path/alerts.xlsx");
+InputFileReader reader = InputFileReader.builder()
+    .name("alerts.xlsx")
+    .worksheet("Email Channels")
+    .withInputStream(is)
+    .build();
+config.setAlertChannels(EmailChannelParser.parse(reader));
+is.close();
+```
+Note that alert channels, policies or conditions can be imported or exported using files in either CSV, XLS or XLSX format.
+The file format is derived from the extension of the filename (either .csv, .xls or .xlsx).
+The "worksheet" parameter defines the name of the sheet containing the required data if the file is a workbook in either XLS or XLSX format.
+
+The following parsers have been included for alert channels:
+* EmailChannelParser
+* SlackChannelParser
+* HipChatChannelParser
+* OpsGenieChannelParser
+* PagerDutyChannelParser
+* CampfireChannelParser
+* UserChannelParser
+* VictorOpsChannelParser
+* xMattersChannelParser
+
+Similarly, to load a file containing alert policies into the alert configuration:
 ```
 InputStream is = new FileInputStream("path/alerts.xlsx");
 InputFileReader reader = InputFileReader.builder()
@@ -65,9 +91,17 @@ InputFileReader reader = InputFileReader.builder()
 config.setAlertPolicies(AlertPolicyParser.parse(reader));
 is.close();
 ```
-To carry out operations on the alert policies in the alert configuration, first create a manager:
+To carry out operations on the alert channels, policies or conditions in the alert configuration, first create a manager:
 ```
 AlertManager manager = new AlertManager("YOUR_API_KEY");
+```
+To create the alert channels from the alert configuration in New Relic:
+```
+List<AlertChannel> created = manager.createAlertChannels(config.getAlertChannels());
+```
+Alternatively, to delete the alert channels in the alert configuration from New Relic:
+```
+List<AlertChannel> deleted = manager.deleteAlertChannels(config.getAlertChannels());
 ```
 To create the alert policies from the alert configuration in New Relic:
 ```
@@ -77,21 +111,34 @@ Alternatively, to delete the alert policies in the alert configuration from New 
 ```
 List<AlertPolicy> deleted = manager.deleteAlertPolicies(config.getAlertPolicies());
 ```
-Finally, to output a set of alert policies to a spreadsheet file:
+Finally, to output a set of email alert channels to a spreadsheet file, first create a writer and then pass it to the appropriate renderer:
 ```
+OutputStream os = new FileOutputStream("path/new-alerts.xlsx");
+OutputFileWriter writer = OutputFileWriter.builder()
+    .name("new-alerts.xlsx")
+    .worksheet("Alert Channels")
+    .withOutputStream(os)
+    .build();
+EmailChannelRenderer.write(policies, writer);
+os.close();
+writer.close();
+```
+Next, to add a set of alert policies as a new sheet in the same workbook, first get the existing workbook and then pass it to the writer:
+```
+Workbook workbook = Workbook.getWorkbook(new File("path", "new-alerts.xlsx"));
 OutputStream os = new FileOutputStream("path/new-alerts.xlsx");
 OutputFileWriter writer = OutputFileWriter.builder()
     .name("new-alerts.xlsx")
     .worksheet("Alert Policies")
     .withOutputStream(os)
+    .withWorkbook(workbook)
     .build();
 AlertPolicyRenderer.write(policies, writer);
 os.close();
 writer.close();
 ```
+Renderers have been included to complement every parser.
 An example spreadsheet file containing multiple alert policies can be found in the [tests](src/test/resources/test-alerts.xlsx).
-Note that alert policies can be imported or exported using files in either CSV, XLS or XLSX format.
-The file format is derived from the extension of the filename (either .csv, .xls or .xlsx).
 
 ## Prerequisites
 
