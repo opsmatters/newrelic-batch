@@ -6,48 +6,11 @@
 [![Javadocs](http://javadoc.io/badge/com.opsmatters/newrelic-batch.svg)](http://javadoc.io/doc/com.opsmatters/newrelic-batch)
 
 Java library that allows New Relic objects to be created automatically from file based definitions.
+New Relic Alerts can be configured from alert channels, policies and conditions in CSV or spreadsheet format.
 New Relic Insights dashboards can be created from definition files in YAML format.
-New Relic Alerts can be configured from alert policy definitions in CSV or spreadsheet format.
 It provides a set of tools to accelerate or automate the deployment of New Relic Alerts and Insights dashboards.
 
 ## Examples
-
-### Dashboards
-First create a dashboard configuration to hold the dashboards:
-```
-DashboardConfiguration config = new DashboardConfiguration();
-```
-Next, load a file containing dashboards in YAML format into the dashboard configuration:
-```
-Reader reader = new FileReader("path/dashboards.yml");
-config.setDashboards(DashboardParser.parseYaml(reader));
-reader.close();
-```
-To carry out operations on the dashboards in the dashboard configuration, first create a manager:
-```
-DashboardManager manager = new DashboardManager("YOUR_API_KEY");
-```
-To create the dashboards from the dashboard configuration in New Relic:
-```
-List<Dashboard> created = manager.createDashboards(config.getDashboards());
-```
-Alternatively, to delete the dashboards in the dashboard configuration from New Relic:
-```
-List<Dashboard> deleted = manager.deleteDashboards(config.getDashboards());
-```
-Finally, to output a set of dashboards to a YAML file:
-```
-Writer writer = new FileWriter("path/new_dashboards.yml");
-DashboardRenderer.toYaml(dashboards, writer);
-writer.close();
-```
-Similarly, to output with a banner:
-```
-Writer writer = new FileWriter("path/new_dashboards.yml");
-DashboardRenderer.builder().withBanner(true).title(OUTPUT_FILENAME).build().renderYaml(dashboards, writer);
-writer.close();
-```
-An example YAML file containing multiple dashboards and widgets can be found in the [tests](src/test/resources/test-dashboards.yml).
 
 ### Alerts
 First create an alert configuration to hold the alert channels, policies and conditions:
@@ -133,6 +96,43 @@ writer.close();
 Renderers have been included to complement every parser.
 
 An example spreadsheet file containing multiple alert policies can be found in the [tests](src/test/resources/test-alerts.xlsx).
+
+### Dashboards
+First create a dashboard configuration to hold the dashboards:
+```
+DashboardConfiguration config = new DashboardConfiguration();
+```
+Next, load a file containing dashboards in YAML format into the dashboard configuration:
+```
+Reader reader = new FileReader("path/dashboards.yml");
+config.setDashboards(DashboardParser.parseYaml(reader));
+reader.close();
+```
+To carry out operations on the dashboards in the dashboard configuration, first create a manager:
+```
+DashboardManager manager = new DashboardManager("YOUR_API_KEY");
+```
+To create the dashboards from the dashboard configuration in New Relic:
+```
+List<Dashboard> created = manager.createDashboards(config.getDashboards());
+```
+Alternatively, to delete the dashboards in the dashboard configuration from New Relic:
+```
+List<Dashboard> deleted = manager.deleteDashboards(config.getDashboards());
+```
+Finally, to output a set of dashboards to a YAML file:
+```
+Writer writer = new FileWriter("path/new_dashboards.yml");
+DashboardRenderer.toYaml(dashboards, writer);
+writer.close();
+```
+Similarly, to output with a banner:
+```
+Writer writer = new FileWriter("path/new_dashboards.yml");
+DashboardRenderer.builder().withBanner(true).title(OUTPUT_FILENAME).build().renderYaml(dashboards, writer);
+writer.close();
+```
+An example YAML file containing multiple dashboards and widgets can be found in the [tests](src/test/resources/test-dashboards.yml).
 
 ## Prerequisites
 

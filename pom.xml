@@ -7,8 +7,8 @@
   <name>New Relic Batch</name>
   <description>
     Java library that allows New Relic objects to be created automatically from file based definitions.
+    New Relic Alerts can be configured from alert channels, policies and conditions in CSV or spreadsheet format.
     New Relic Insights dashboards can be created from definition files in YAML format.
-    New Relic Alerts can be configured from alert policy definitions in CSV or spreadsheet format.
     It provides a set of tools to accelerate or automate the deployment of New Relic Alerts and Insights dashboards.
   </description>
   <url>https://github.com/opsmatters/newrelic-batch</url>
