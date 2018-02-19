@@ -36,6 +36,7 @@ public class TemplateFactory
     private static final Template alertPolicyTemplate = new AlertPolicyTemplate();
     private static final Template emailChannelTemplate = new EmailChannelTemplate();
     private static final Template slackChannelTemplate = new SlackChannelTemplate();
+    private static final Template hipchatChannelTemplate = new HipChatChannelTemplate();
 
     static
     {
@@ -46,6 +47,8 @@ public class TemplateFactory
         EmailChannelRenderer.registerTemplate(emailChannelTemplate);
         SlackChannelParser.registerTemplate(slackChannelTemplate);
         SlackChannelRenderer.registerTemplate(slackChannelTemplate);
+        HipChatChannelParser.registerTemplate(hipchatChannelTemplate);
+        HipChatChannelRenderer.registerTemplate(hipchatChannelTemplate);
     }
 
     /**
