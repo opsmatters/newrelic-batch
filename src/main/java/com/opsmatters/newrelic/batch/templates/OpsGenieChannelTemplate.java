@@ -16,35 +16,39 @@
 
 package com.opsmatters.newrelic.batch.templates;
 
-import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
-import com.opsmatters.newrelic.api.model.alerts.channels.SlackConfiguration;
+import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieConfiguration;
 
 /**
- * Template that defines the Slack alert channel file format.
+ * Template that defines the OpsGenie alert channel file format.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class SlackChannelTemplate extends Template
+public class OpsGenieChannelTemplate extends Template
 {
     /**
      * The type of the template.  
      */
-    public static final String TYPE = "slack-channel";
+    public static final String TYPE = "opsgenie-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(SlackChannel.NAME, "Name", true);
-    public TemplateColumn URL = new TemplateColumn(SlackConfiguration.URL, "URL", true);
-    public TemplateColumn CHANNEL = new TemplateColumn(SlackConfiguration.CHANNEL, "Channel", true);
+    public TemplateColumn NAME = new TemplateColumn(OpsGenieChannel.NAME, "Name", true);
+    public TemplateColumn API_KEY = new TemplateColumn(OpsGenieConfiguration.API_KEY, "API Key", true);
+    public TemplateColumn TEAMS = new TemplateColumn(OpsGenieConfiguration.TEAMS, "Teams", true);
+    public TemplateColumn TAGS = new TemplateColumn(OpsGenieConfiguration.TAGS, "Tags", true);
+    public TemplateColumn RECIPIENTS = new TemplateColumn(OpsGenieConfiguration.RECIPIENTS, "Recipients", true);
 
     /**
      * Default constructor.
      */
-    public SlackChannelTemplate()
+    public OpsGenieChannelTemplate()
     {
         addColumn(NAME);
         addColumn(Template.TYPE);
-        addColumn(URL);
-        addColumn(CHANNEL);
+        addColumn(API_KEY);
+        addColumn(TEAMS);
+        addColumn(TAGS);
+        addColumn(RECIPIENTS);
     }
 
     /**

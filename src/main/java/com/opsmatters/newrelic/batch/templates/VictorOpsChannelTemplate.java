@@ -16,35 +16,35 @@
 
 package com.opsmatters.newrelic.batch.templates;
 
-import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
-import com.opsmatters.newrelic.api.model.alerts.channels.SlackConfiguration;
+import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsConfiguration;
 
 /**
- * Template that defines the Slack alert channel file format.
+ * Template that defines the VictorOps alert channel file format.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class SlackChannelTemplate extends Template
+public class VictorOpsChannelTemplate extends Template
 {
     /**
      * The type of the template.  
      */
-    public static final String TYPE = "slack-channel";
+    public static final String TYPE = "victorops-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(SlackChannel.NAME, "Name", true);
-    public TemplateColumn URL = new TemplateColumn(SlackConfiguration.URL, "URL", true);
-    public TemplateColumn CHANNEL = new TemplateColumn(SlackConfiguration.CHANNEL, "Channel", true);
+    public TemplateColumn NAME = new TemplateColumn(VictorOpsChannel.NAME, "Name", true);
+    public TemplateColumn KEY = new TemplateColumn(VictorOpsConfiguration.KEY, "Key", true);
+    public TemplateColumn ROUTE_KEY = new TemplateColumn(VictorOpsConfiguration.ROUTE_KEY, "Route Key", true);
 
     /**
      * Default constructor.
      */
-    public SlackChannelTemplate()
+    public VictorOpsChannelTemplate()
     {
         addColumn(NAME);
         addColumn(Template.TYPE);
-        addColumn(URL);
-        addColumn(CHANNEL);
+        addColumn(KEY);
+        addColumn(ROUTE_KEY);
     }
 
     /**

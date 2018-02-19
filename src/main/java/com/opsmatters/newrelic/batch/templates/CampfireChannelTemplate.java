@@ -16,35 +16,37 @@
 
 package com.opsmatters.newrelic.batch.templates;
 
-import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
-import com.opsmatters.newrelic.api.model.alerts.channels.SlackConfiguration;
+import com.opsmatters.newrelic.api.model.alerts.channels.CampfireChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.CampfireConfiguration;
 
 /**
- * Template that defines the Slack alert channel file format.
+ * Template that defines the Campfire alert channel file format.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class SlackChannelTemplate extends Template
+public class CampfireChannelTemplate extends Template
 {
     /**
      * The type of the template.  
      */
-    public static final String TYPE = "slack-channel";
+    public static final String TYPE = "campfire-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(SlackChannel.NAME, "Name", true);
-    public TemplateColumn URL = new TemplateColumn(SlackConfiguration.URL, "URL", true);
-    public TemplateColumn CHANNEL = new TemplateColumn(SlackConfiguration.CHANNEL, "Channel", true);
+    public TemplateColumn NAME = new TemplateColumn(CampfireChannel.NAME, "Name", true);
+    public TemplateColumn SUBDOMAIN = new TemplateColumn(CampfireConfiguration.SUBDOMAIN, "Subdomain", true);
+    public TemplateColumn TOKEN = new TemplateColumn(CampfireConfiguration.TOKEN, "Token", true);
+    public TemplateColumn ROOM = new TemplateColumn(CampfireConfiguration.ROOM, "Room", true);
 
     /**
      * Default constructor.
      */
-    public SlackChannelTemplate()
+    public CampfireChannelTemplate()
     {
         addColumn(NAME);
         addColumn(Template.TYPE);
-        addColumn(URL);
-        addColumn(CHANNEL);
+        addColumn(SUBDOMAIN);
+        addColumn(TOKEN);
+        addColumn(ROOM);
     }
 
     /**

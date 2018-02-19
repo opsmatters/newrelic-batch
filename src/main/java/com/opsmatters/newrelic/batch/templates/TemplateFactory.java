@@ -37,6 +37,12 @@ public class TemplateFactory
     private static final Template emailChannelTemplate = new EmailChannelTemplate();
     private static final Template slackChannelTemplate = new SlackChannelTemplate();
     private static final Template hipchatChannelTemplate = new HipChatChannelTemplate();
+    private static final Template campfireChannelTemplate = new CampfireChannelTemplate();
+    private static final Template opsgenieChannelTemplate = new OpsGenieChannelTemplate();
+    private static final Template pagerdutyChannelTemplate = new PagerDutyChannelTemplate();
+    private static final Template userChannelTemplate = new UserChannelTemplate();
+    private static final Template victoropsChannelTemplate = new VictorOpsChannelTemplate();
+    private static final Template xmattersChannelTemplate = new xMattersChannelTemplate();
 
     static
     {
@@ -49,6 +55,18 @@ public class TemplateFactory
         SlackChannelRenderer.registerTemplate(slackChannelTemplate);
         HipChatChannelParser.registerTemplate(hipchatChannelTemplate);
         HipChatChannelRenderer.registerTemplate(hipchatChannelTemplate);
+        CampfireChannelParser.registerTemplate(campfireChannelTemplate);
+        CampfireChannelRenderer.registerTemplate(campfireChannelTemplate);
+        OpsGenieChannelParser.registerTemplate(opsgenieChannelTemplate);
+        OpsGenieChannelRenderer.registerTemplate(opsgenieChannelTemplate);
+        PagerDutyChannelParser.registerTemplate(pagerdutyChannelTemplate);
+        PagerDutyChannelRenderer.registerTemplate(pagerdutyChannelTemplate);
+        UserChannelParser.registerTemplate(userChannelTemplate);
+        UserChannelRenderer.registerTemplate(userChannelTemplate);
+        VictorOpsChannelParser.registerTemplate(victoropsChannelTemplate);
+        VictorOpsChannelRenderer.registerTemplate(victoropsChannelTemplate);
+        xMattersChannelParser.registerTemplate(xmattersChannelTemplate);
+        xMattersChannelRenderer.registerTemplate(xmattersChannelTemplate);
     }
 
     /**

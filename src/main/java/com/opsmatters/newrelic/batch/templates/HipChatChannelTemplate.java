@@ -34,7 +34,7 @@ public class HipChatChannelTemplate extends Template
     // The template columns
     public TemplateColumn NAME = new TemplateColumn(HipChatChannel.NAME, "Name", true);
     public TemplateColumn AUTH_TOKEN = new TemplateColumn(HipChatConfiguration.AUTH_TOKEN, "Auth Token", true);
-    public TemplateColumn ROOM_ID = new TemplateColumn(HipChatConfiguration.ROOM_ID, "Room ID", false);
+    public TemplateColumn ROOM_ID = new TemplateColumn(HipChatConfiguration.ROOM_ID, "Room ID", true);
 
     /**
      * Default constructor.

@@ -33,14 +33,29 @@ import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.HipChatChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.CampfireChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
 import com.opsmatters.newrelic.batch.parsers.SlackChannelParser;
 import com.opsmatters.newrelic.batch.parsers.HipChatChannelParser;
+import com.opsmatters.newrelic.batch.parsers.CampfireChannelParser;
+import com.opsmatters.newrelic.batch.parsers.OpsGenieChannelParser;
+import com.opsmatters.newrelic.batch.parsers.PagerDutyChannelParser;
+import com.opsmatters.newrelic.batch.parsers.VictorOpsChannelParser;
+import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.CampfireChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.OpsGenieChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.PagerDutyChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.VictorOpsChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
 import com.opsmatters.core.reports.InputFileReader;
 import com.opsmatters.core.reports.OutputFileWriter;
@@ -66,6 +81,11 @@ public class AlertsTest
     private static final String EMAIL_CHANNEL_TAB = "email channels";
     private static final String SLACK_CHANNEL_TAB = "slack channels";
     private static final String HIPCHAT_CHANNEL_TAB = "hipchat channels";
+    private static final String CAMPFIRE_CHANNEL_TAB = "campfire channels";
+    private static final String OPSGENIE_CHANNEL_TAB = "opsgenie channels";
+    private static final String PAGERDUTY_CHANNEL_TAB = "pagerduty channels";
+    private static final String VICTOROPS_CHANNEL_TAB = "victorops channels";
+    private static final String XMATTERS_CHANNEL_TAB = "xmatters channels";
 
     @Test
     public void testNewRelicAlerts()
@@ -79,6 +99,11 @@ public class AlertsTest
         readEmailChannels(config);
         readSlackChannels(config);
         readHipChatChannels(config);
+        readCampfireChannels(config);
+        readOpsGenieChannels(config);
+        readPagerDutyChannels(config);
+        readVictorOpsChannels(config);
+        //readxMattersChannels(config);
         readAlertPolicies(config);
 
         List<AlertChannel> channels = config.getAlertChannels();
@@ -104,6 +129,11 @@ public class AlertsTest
         writeEmailChannels(config);
         writeSlackChannels(config);
         writeHipChatChannels(config);
+        writeCampfireChannels(config);
+        writeOpsGenieChannels(config);
+        writePagerDutyChannels(config);
+        writeVictorOpsChannels(config);
+        //writexMattersChannels(config);
         writeAlertPolicies(config);
 
         logger.info("Completed test: "+testName);
@@ -344,6 +374,426 @@ public class AlertsTest
         catch(IOException e)
         {
             logger.severe("Unable to write HipChat alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readCampfireChannels(AlertConfiguration config)
+    {
+        // Read the Campfire alert channel file
+        logger.info("Loading Campfire alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+CAMPFIRE_CHANNEL_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(CAMPFIRE_CHANNEL_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<CampfireChannel> channels = CampfireChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" Campfire alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find Campfire alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeCampfireChannels(AlertConfiguration config)
+    {
+        List<CampfireChannel> channels = config.getCampfireChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing Campfire alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+CAMPFIRE_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(CAMPFIRE_CHANNEL_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            CampfireChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" Campfire alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write Campfire alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readOpsGenieChannels(AlertConfiguration config)
+    {
+        // Read the OpsGenie alert channel file
+        logger.info("Loading OpsGenie alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+OPSGENIE_CHANNEL_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(OPSGENIE_CHANNEL_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<OpsGenieChannel> channels = OpsGenieChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" OpsGenie alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find OpsGenie alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeOpsGenieChannels(AlertConfiguration config)
+    {
+        List<OpsGenieChannel> channels = config.getOpsGenieChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing OpsGenie alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+OPSGENIE_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(OPSGENIE_CHANNEL_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            OpsGenieChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" OpsGenie alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write OpsGenie alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readPagerDutyChannels(AlertConfiguration config)
+    {
+        // Read the PagerDuty alert channel file
+        logger.info("Loading PagerDuty alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+PAGERDUTY_CHANNEL_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(PAGERDUTY_CHANNEL_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<PagerDutyChannel> channels = PagerDutyChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" PagerDuty alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find PagerDuty alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writePagerDutyChannels(AlertConfiguration config)
+    {
+        List<PagerDutyChannel> channels = config.getPagerDutyChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing PagerDuty alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+PAGERDUTY_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(PAGERDUTY_CHANNEL_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            PagerDutyChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" PagerDuty alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write PagerDuty alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readVictorOpsChannels(AlertConfiguration config)
+    {
+        // Read the VictorOps alert channel file
+        logger.info("Loading VictorOps alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+VICTOROPS_CHANNEL_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(VICTOROPS_CHANNEL_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<VictorOpsChannel> channels = VictorOpsChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" VictorOps alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find VictorOps alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeVictorOpsChannels(AlertConfiguration config)
+    {
+        List<VictorOpsChannel> channels = config.getVictorOpsChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing VictorOps alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+VICTOROPS_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(VICTOROPS_CHANNEL_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            VictorOpsChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" VictorOps alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write VictorOps alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readxMattersChannels(AlertConfiguration config)
+    {
+        // Read the xMatters alert channel file
+        logger.info("Loading xMatters alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+XMATTERS_CHANNEL_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(XMATTERS_CHANNEL_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<xMattersChannel> channels = xMattersChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" xMatters alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find xMatters alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writexMattersChannels(AlertConfiguration config)
+    {
+        List<xMattersChannel> channels = config.getxMattersChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing xMatters alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+XMATTERS_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(XMATTERS_CHANNEL_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            xMattersChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" xMatters alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write xMatters alert channel file: "+e.getClass().getName()+": "+e.getMessage());
         }
         catch(Exception e)
         {
