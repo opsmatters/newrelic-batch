@@ -65,8 +65,7 @@ InputFileReader reader = InputFileReader.builder()
 config.setAlertChannels(EmailChannelParser.parse(reader));
 is.close();
 ```
-Note that alert channels, policies or conditions can be imported or exported using files in either CSV, XLS or XLSX format.
-The file format is derived from the extension of the filename (either .csv, .xls or .xlsx).
+**Note** that alert channels, policies or conditions can be imported or exported using files in either CSV, XLS or XLSX format, where the file format is derived from the extension of the filename (either .csv, .xls or .xlsx).
 The "worksheet" parameter defines the name of the sheet containing the required data if the file is a workbook in either XLS or XLSX format.
 
 The following parsers have been included for alert channels:
@@ -95,21 +94,15 @@ To carry out operations on the alert channels, policies or conditions in the ale
 ```
 AlertManager manager = new AlertManager("YOUR_API_KEY");
 ```
-To create the alert channels from the alert configuration in New Relic:
+To create the alert channels or policies from the alert configuration in New Relic:
 ```
-List<AlertChannel> created = manager.createAlertChannels(config.getAlertChannels());
+List<AlertChannel> createdChannels = manager.createAlertChannels(config.getAlertChannels());
+List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
 ```
-Alternatively, to delete the alert channels in the alert configuration from New Relic:
+Alternatively, to delete the alert channels or policies in the alert configuration from New Relic:
 ```
-List<AlertChannel> deleted = manager.deleteAlertChannels(config.getAlertChannels());
-```
-To create the alert policies from the alert configuration in New Relic:
-```
-List<AlertPolicy> created = manager.createAlertPolicies(config.getAlertPolicies());
-```
-Alternatively, to delete the alert policies in the alert configuration from New Relic:
-```
-List<AlertPolicy> deleted = manager.deleteAlertPolicies(config.getAlertPolicies());
+List<AlertChannel> deletedChannels = manager.deleteAlertChannels(config.getAlertChannels());
+List<AlertPolicy> deletedPolicies = manager.deleteAlertPolicies(config.getAlertPolicies());
 ```
 Finally, to output a set of email alert channels to a spreadsheet file, first create a writer and then pass it to the appropriate renderer:
 ```
@@ -138,6 +131,7 @@ os.close();
 writer.close();
 ```
 Renderers have been included to complement every parser.
+
 An example spreadsheet file containing multiple alert policies can be found in the [tests](src/test/resources/test-alerts.xlsx).
 
 ## Prerequisites
