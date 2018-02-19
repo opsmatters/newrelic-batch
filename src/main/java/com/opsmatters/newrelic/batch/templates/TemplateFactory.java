@@ -35,6 +35,7 @@ public class TemplateFactory
     private static final Map<Class,Template> templates = new HashMap<Class,Template>();
     private static final Template alertPolicyTemplate = new AlertPolicyTemplate();
     private static final Template emailChannelTemplate = new EmailChannelTemplate();
+    private static final Template slackChannelTemplate = new SlackChannelTemplate();
 
     static
     {
@@ -43,6 +44,8 @@ public class TemplateFactory
         AlertPolicyRenderer.registerTemplate(alertPolicyTemplate);
         EmailChannelParser.registerTemplate(emailChannelTemplate);
         EmailChannelRenderer.registerTemplate(emailChannelTemplate);
+        SlackChannelParser.registerTemplate(slackChannelTemplate);
+        SlackChannelRenderer.registerTemplate(slackChannelTemplate);
     }
 
     /**

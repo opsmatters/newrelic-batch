@@ -31,10 +31,13 @@ import com.opsmatters.newrelic.api.Constants;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
+import com.opsmatters.newrelic.batch.parsers.SlackChannelParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
 import com.opsmatters.core.reports.InputFileReader;
 import com.opsmatters.core.reports.OutputFileWriter;
@@ -58,6 +61,7 @@ public class AlertsTest
     private static final String OUTPUT_FILENAME = "test-alerts-new.xlsx";
     private static final String ALERT_POLICY_TAB = "alert policies";
     private static final String EMAIL_CHANNEL_TAB = "email channels";
+    private static final String SLACK_CHANNEL_TAB = "slack channels";
 
     @Test
     public void testNewRelicAlerts()
@@ -69,6 +73,7 @@ public class AlertsTest
 
         // Read the alert configuration
         readEmailChannels(config);
+        readSlackChannels(config);
         readAlertPolicies(config);
 
         List<AlertChannel> channels = config.getAlertChannels();
@@ -92,6 +97,7 @@ public class AlertsTest
 
         // Write the alert configuration
         writeEmailChannels(config);
+        writeSlackChannels(config);
         writeAlertPolicies(config);
 
         logger.info("Completed test: "+testName);
@@ -164,6 +170,88 @@ public class AlertsTest
         catch(IOException e)
         {
             logger.severe("Unable to write email alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readSlackChannels(AlertConfiguration config)
+    {
+        // Read the slack alert channel file
+        logger.info("Loading slack alert channel file: "+INPUT_PATH+INPUT_FILENAME+"/"+SLACK_CHANNEL_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(SLACK_CHANNEL_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<SlackChannel> channels = SlackChannelParser.parse(reader);
+            logger.info("Read "+channels.size()+" slack alert channels");
+            config.addAlertChannels(channels);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find slack alert channel file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeSlackChannels(AlertConfiguration config)
+    {
+        List<SlackChannel> channels = config.getSlackChannels();
+
+        // Write the new channels to a new filename
+        logger.info("Writing slack alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+SLACK_CHANNEL_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(SLACK_CHANNEL_TAB)
+                .withOutputStream(os)
+                .build();
+
+            SlackChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" slack alert channels");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write slack alert channel file: "+e.getClass().getName()+": "+e.getMessage());
         }
         catch(Exception e)
         {
