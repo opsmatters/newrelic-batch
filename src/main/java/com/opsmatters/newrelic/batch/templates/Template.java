@@ -58,6 +58,8 @@ public abstract class Template
      */
     public void addColumn(TemplateColumn column)
     {
+        if(columns.containsKey(column.getName())) // Error on duplicate column
+            throw new IllegalStateException("column already exists: "+column.getName());
         columns.put(column.getName(), column);
     }
 

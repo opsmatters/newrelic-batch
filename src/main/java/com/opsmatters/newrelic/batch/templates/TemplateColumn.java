@@ -89,4 +89,13 @@ public class TemplateColumn
     {
         return deflt;
     }
+
+    /**
+     * Returns the name of the column.  
+     * @return The name of the column
+     */
+    public String toString()
+    {
+        return getName();
+    }
 }

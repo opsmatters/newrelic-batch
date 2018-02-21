@@ -31,6 +31,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.UserChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.WebhookChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
+import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 
 /**
  * Represents a set of alert policies, conditions and channels.
@@ -43,6 +44,7 @@ public class AlertConfiguration
 
     private List<AlertPolicy> policies = new ArrayList<AlertPolicy>();
     private List<AlertChannel> channels = new ArrayList<AlertChannel>();
+    private List<AlertCondition> conditions = new ArrayList<AlertCondition>();
 
     /**
      * Default constructor.
@@ -276,6 +278,43 @@ public class AlertConfiguration
     }
 
     /**
+     * Replaces the alert conditions with the given set of conditions.
+     * @param conditions The set of conditions
+     */
+    public void setAlertConditions(List<AlertCondition> conditions)
+    {
+        this.conditions.clear();
+        this.conditions.addAll(conditions);
+    }
+
+    /**
+     * Adds the given alert conditions to the current set of conditions.
+     * @param conditions The conditions to add
+     */
+    public void addAlertConditions(List<AlertCondition> conditions)
+    {
+        this.conditions.addAll(conditions);
+    }
+
+    /**
+     * Returns the set of alert conditions.
+     * @return The set of conditions
+     */
+    public List<AlertCondition> getAlertConditions()
+    {
+        return conditions;
+    }
+
+    /**
+     * Returns the number of alert conditions.
+     * @return The number of alert conditions
+     */
+    public int numAlertConditions()
+    {
+        return conditions.size();
+    }
+
+    /**
      * Returns a string representation of the object.
      */
     @Override
@@ -283,6 +322,7 @@ public class AlertConfiguration
     {
         return "AlertConfiguration [policies="+policies.size()
             +", channels="+channels.size()
+            +", conditions="+conditions.size()
             +"]";
     }
 }

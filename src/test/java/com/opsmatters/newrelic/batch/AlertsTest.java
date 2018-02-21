@@ -38,6 +38,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
+import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
 import com.opsmatters.newrelic.batch.parsers.SlackChannelParser;
@@ -47,6 +48,7 @@ import com.opsmatters.newrelic.batch.parsers.OpsGenieChannelParser;
 import com.opsmatters.newrelic.batch.parsers.PagerDutyChannelParser;
 import com.opsmatters.newrelic.batch.parsers.VictorOpsChannelParser;
 import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
+import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
@@ -56,6 +58,7 @@ import com.opsmatters.newrelic.batch.renderers.OpsGenieChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.PagerDutyChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.VictorOpsChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
 import com.opsmatters.core.reports.InputFileReader;
 import com.opsmatters.core.reports.OutputFileWriter;
@@ -86,6 +89,7 @@ public class AlertsTest
     private static final String PAGERDUTY_CHANNEL_TAB = "pagerduty channels";
     private static final String VICTOROPS_CHANNEL_TAB = "victorops channels";
     private static final String XMATTERS_CHANNEL_TAB = "xmatters channels";
+    private static final String ALERT_CONDITION_TAB = "alert conditions";
 
     @Test
     public void testNewRelicAlerts()
@@ -94,8 +98,9 @@ public class AlertsTest
         logger.info("Starting test: "+testName);
 
         AlertConfiguration config = new AlertConfiguration();
+        AlertManager manager = new AlertManager(apiKey);
 
-        // Read the alert configuration
+        // Read the alert channels
         readEmailChannels(config);
         readSlackChannels(config);
         readHipChatChannels(config);
@@ -104,26 +109,41 @@ public class AlertsTest
         readPagerDutyChannels(config);
         readVictorOpsChannels(config);
         //readxMattersChannels(config);
-        readAlertPolicies(config);
 
         List<AlertChannel> channels = config.getAlertChannels();
-        List<AlertPolicy> policies = config.getAlertPolicies();
         Assert.assertTrue(config.numAlertChannels() > 0);
+
+        // Read the alert policies
+        readAlertPolicies(config);
+
+        List<AlertPolicy> policies = config.getAlertPolicies();
         Assert.assertTrue(config.numAlertPolicies() > 0);
 
-        AlertManager manager = new AlertManager(apiKey);
-
-        // Delete the existing alert configuration
+        // Delete the existing alert channels
         List<AlertChannel> deletedChannels = manager.deleteAlertChannels(config.getAlertChannels());
-        List<AlertPolicy> deletedPolicies = manager.deleteAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(deletedChannels.size() == channels.size());
+
+        // Delete the existing alert policies
+        List<AlertPolicy> deletedPolicies = manager.deleteAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(deletedPolicies.size() == policies.size());
 
-        // Create the new alert configuration
+        // Create the new alert channels
         List<AlertChannel> createdChannels = manager.createAlertChannels(config.getAlertChannels());
-        List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(createdChannels.size() == channels.size());
+
+        // Create the new alert policies
+        List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(createdPolicies.size() == policies.size());
+
+        // Read the alert conditions
+        readAlertConditions(createdPolicies, config);
+
+        List<AlertCondition> conditions = config.getAlertConditions();
+        Assert.assertTrue(config.numAlertConditions() > 0);
+
+        // Create the new alert configuration
+        List<AlertCondition> createdConditions = manager.createAlertConditions(config.getAlertConditions());
+        Assert.assertTrue(createdConditions.size() == conditions.size());
 
         // Write the alert configuration
         writeEmailChannels(config);
@@ -135,6 +155,7 @@ public class AlertsTest
         writeVictorOpsChannels(config);
         //writexMattersChannels(config);
         writeAlertPolicies(config);
+        writeAlertConditions(createdPolicies, config);
 
         logger.info("Completed test: "+testName);
     }
@@ -878,6 +899,90 @@ public class AlertsTest
         catch(IOException e)
         {
             logger.severe("Unable to write alert policy file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        // Read the alert condition file
+        logger.info("Loading alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(ALERT_CONDITION_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<AlertCondition> conditions = AlertConditionParser.parse(policies, reader);
+            logger.info("Read "+conditions.size()+" alert conditions");
+            config.setAlertConditions(conditions);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        List<AlertCondition> conditions = config.getAlertConditions();
+
+        // Write the new conditions to a new filename
+        logger.info("Writing alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(ALERT_CONDITION_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            AlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" alert conditions");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
         catch(Exception e)
         {

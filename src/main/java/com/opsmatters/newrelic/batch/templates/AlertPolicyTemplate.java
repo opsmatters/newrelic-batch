@@ -17,6 +17,7 @@
 package com.opsmatters.newrelic.batch.templates;
 
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.IncidentPreference;
 
 /**
  * Template that defines the alert policy file format.
@@ -32,7 +33,8 @@ public class AlertPolicyTemplate extends Template
 
     // The template columns
     public TemplateColumn NAME = new TemplateColumn(AlertPolicy.NAME, "Name", true);
-    public TemplateColumn INCIDENT_PREFERENCE = new TemplateColumn(AlertPolicy.INCIDENT_PREFERENCE, "Incident Preference", false, "PER_POLICY");
+    public TemplateColumn INCIDENT_PREFERENCE = new TemplateColumn(AlertPolicy.INCIDENT_PREFERENCE, "Incident Preference", false, 
+        IncidentPreference.PER_POLICY.name());
 
     /**
      * Default constructor.

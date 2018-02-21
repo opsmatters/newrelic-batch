@@ -81,7 +81,10 @@ public class TemplateInstance
      */
     public String getType(String[] line)
     {
-        return line[getIndex(Template.TYPE)];
+        int pos = getIndex(Template.TYPE);
+        if(pos != -1 && pos < line.length)
+            return line[pos];
+        return null;
     }
 
     /**
@@ -104,12 +107,14 @@ public class TemplateInstance
     {
         String ret = null;
         TemplateColumn column = template.getColumn(name);
+        if(column == null)
+            throw new IllegalArgumentException("missing column: "+name);
         int pos = getIndex(column);
         if(pos != -1 && pos < line.length)
             ret = line[pos];
         if(ret == null)
             ret = column.getDefault();
-        return ret;
+        return ret.trim();
     }
 
     /**
@@ -121,5 +126,16 @@ public class TemplateInstance
     public Boolean getBoolean(String name, String[] line)
     {
         return Boolean.valueOf(getString(name, line));
+    }
+
+    /**
+     * Returns the integer value of the given column in the given line.
+     * @param name The name of the column
+     * @param line The line of the file
+     * @return The value of the column from the line
+     */
+    public Integer getInteger(String name, String[] line)
+    {
+        return Integer.valueOf(getString(name, line));
     }
 }

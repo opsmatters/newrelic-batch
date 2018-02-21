@@ -54,9 +54,15 @@ public abstract class OutputFileRenderer<T>
 
     /**
      * Serializes the item to a line.
+     * <P>
+     * Implemented by super-class.
+     * </P>
      * @param template The template with the columns
      * @param item The item to be serialized
      * @return The line representing the item
      */
-    protected abstract String[] serialize(Template template, T item);
+    protected String[] serialize(Template template, T item)
+    {
+        return null;
+    }
 }

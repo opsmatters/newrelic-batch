@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
+import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -295,6 +296,119 @@ public class AlertManager
             logger.info("Deleting alert channel: "+channel.getId());
             apiClient.alertChannels().delete(channel.getId());
             logger.info("Deleted alert channel : "+channel.getId()+" - "+channel.getName());
+        }
+    }
+
+    /**
+     * Creates the given alert conditions.
+     * @param conditions The alert conditions to create
+     * @return The created alert conditions
+     */
+    public List<AlertCondition> createAlertConditions(List<AlertCondition> conditions)
+    {
+        if(conditions == null)
+            throw new IllegalArgumentException("null conditions");
+
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Create the conditions
+        List<AlertCondition> ret = new ArrayList<AlertCondition>();
+        logger.info("Creating "+conditions.size()+" alert conditions");
+        for(AlertCondition condition : conditions)
+        {
+            logger.info("Creating alert condition: "+condition.getName());
+            if(condition.getPolicyId() == null || condition.getPolicyId() == 0L)
+                throw new IllegalArgumentException("condition has missing policy_id: "+condition.getName());
+            condition = apiClient.alertConditions().create(condition.getPolicyId(), condition).get();
+            logger.info("Created alert condition: "+condition.getId()+" - "+condition.getName());
+            ret.add(condition);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Create the given alert condition.
+     * @param condition The alert condition to create
+     * @return The created alert condition
+     */
+    public AlertCondition createAlertCondition(AlertCondition condition)
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Create the condition
+        logger.info("Creating alert condition: "+condition.getName());
+        if(condition.getPolicyId() == null || condition.getPolicyId() == 0L)
+            throw new IllegalArgumentException("condition has missing policyId: "+condition.getName());
+        condition = apiClient.alertConditions().create(condition.getPolicyId(), condition).get();
+        logger.info("Created alert condition: "+condition.getId()+" - "+condition.getName());
+
+        return condition;
+    }
+
+    /**
+     * Delete the given alert conditions.
+     * @param conditions The alert conditions to delete
+     * @return The deleted alert conditions
+     */
+    public List<AlertCondition> deleteAlertConditions(List<AlertCondition> conditions)
+    {
+        if(conditions == null)
+            throw new IllegalArgumentException("null conditions");
+
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Delete the conditions
+        List<AlertCondition> ret = new ArrayList<AlertCondition>();
+        for(AlertCondition condition : conditions)
+        {
+            if(condition.getPolicyId() == null || condition.getPolicyId() == 0L)
+                throw new IllegalArgumentException("condition has missing policyId: "+condition.getName());
+            deleteAlertConditions(condition.getPolicyId(), condition.getName());
+            ret.add(condition);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Delete the given alert condition.
+     * @param condition The alert condition to delete
+     * @return The deleted alert condition
+     */
+    public AlertCondition deleteAlertCondition(AlertCondition condition)
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Delete the condition
+        if(condition.getPolicyId() == null || condition.getPolicyId() == 0L)
+            throw new IllegalArgumentException("condition has missing policyId: "+condition.getName());
+        deleteAlertConditions(condition.getPolicyId(), condition.getName());
+
+        return condition;
+    }
+
+    /**
+     * Delete the alert conditions with the given name.
+     * @param policyId The id of the policy to delete the alert conditions from
+     * @param name The name of the alert conditions
+     */
+    private void deleteAlertConditions(long policyId, String name)
+    {
+        Collection<AlertCondition> conditions = apiClient.alertConditions().list(policyId, name);
+        for(AlertCondition condition : conditions)
+        {
+            logger.info("Deleting alert condition: "+condition.getId());
+            apiClient.alertConditions().delete(condition.getId());
+            logger.info("Deleted alert condition : "+condition.getId()+" - "+condition.getName());
         }
     }
 }

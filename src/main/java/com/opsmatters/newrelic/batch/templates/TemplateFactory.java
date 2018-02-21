@@ -43,6 +43,7 @@ public class TemplateFactory
     private static final Template userChannelTemplate = new UserChannelTemplate();
     private static final Template victoropsChannelTemplate = new VictorOpsChannelTemplate();
     private static final Template xmattersChannelTemplate = new xMattersChannelTemplate();
+    private static final Template alertConditionTemplate = new AlertConditionTemplate();
 
     static
     {
@@ -67,6 +68,8 @@ public class TemplateFactory
         VictorOpsChannelRenderer.registerTemplate(victoropsChannelTemplate);
         xMattersChannelParser.registerTemplate(xmattersChannelTemplate);
         xMattersChannelRenderer.registerTemplate(xmattersChannelTemplate);
+        AlertConditionParser.registerTemplate(alertConditionTemplate);
+        AlertConditionRenderer.registerTemplate(alertConditionTemplate);
     }
 
     /**
