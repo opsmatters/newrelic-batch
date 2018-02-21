@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Class representing an instance of a template.
+ * Class representing an instance of a file template.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class TemplateInstance
+public class FileInstance
 {
-    private Template template;
+    private FileTemplate template;
     private List<String> headers = new ArrayList<String>();
 
     /**
@@ -35,7 +35,7 @@ public class TemplateInstance
      * @param template The template for the instance
      * @param headers The headers of the input file
      */
-    public TemplateInstance(Template template, String[] headers)
+    public FileInstance(FileTemplate template, String[] headers)
     {
         this.template = template;
         for(String header : headers)
@@ -81,7 +81,7 @@ public class TemplateInstance
      */
     public String getType(String[] line)
     {
-        int pos = getIndex(Template.TYPE);
+        int pos = getIndex(FileTemplate.TEMPLATE_TYPE);
         if(pos != -1 && pos < line.length)
             return line[pos];
         return null;
@@ -113,8 +113,8 @@ public class TemplateInstance
         if(pos != -1 && pos < line.length)
             ret = line[pos];
         if(ret == null)
-            ret = column.getDefault();
-        return ret.trim();
+            ret = column.getDefaultValue();
+        return ret != null ? ret.trim() : null;
     }
 
     /**

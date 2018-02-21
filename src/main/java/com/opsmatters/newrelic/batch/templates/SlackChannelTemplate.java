@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.SlackConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class SlackChannelTemplate extends Template
+public class SlackChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,9 +32,18 @@ public class SlackChannelTemplate extends Template
     public static final String TYPE = "slack-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(SlackChannel.NAME, "Name", true);
-    public TemplateColumn URL = new TemplateColumn(SlackConfiguration.URL, "URL", true);
-    public TemplateColumn CHANNEL = new TemplateColumn(SlackConfiguration.CHANNEL, "Channel", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(SlackChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn URL = TemplateColumn.builder()
+        .name(SlackConfiguration.URL)
+        .header("URL")
+        .build();
+    public TemplateColumn CHANNEL = TemplateColumn.builder()
+        .name(SlackConfiguration.CHANNEL)
+        .header("Channel")
+        .build();
 
     /**
      * Default constructor.
@@ -42,7 +51,7 @@ public class SlackChannelTemplate extends Template
     public SlackChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(URL);
         addColumn(CHANNEL);
     }

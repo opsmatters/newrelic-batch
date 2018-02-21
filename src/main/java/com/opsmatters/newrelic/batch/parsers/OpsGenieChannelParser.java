@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts OpsGenie alert channels from report lines.
@@ -46,7 +46,7 @@ public class OpsGenieChannelParser extends InputFileParser<OpsGenieChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(OpsGenieChannelParser.class, template);
     }
@@ -76,18 +76,18 @@ public class OpsGenieChannelParser extends InputFileParser<OpsGenieChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected OpsGenieChannel create(TemplateInstance template, String[] line)
+    protected OpsGenieChannel create(FileInstance file, String[] line)
     {
         return OpsGenieChannel.builder()
-            .name(template.getString(OpsGenieChannel.NAME, line))
-            .apiKey(template.getString(OpsGenieConfiguration.API_KEY, line))
-            .teams(template.getString(OpsGenieConfiguration.TEAMS, line))
-            .tags(template.getString(OpsGenieConfiguration.TAGS, line))
-            .recipients(template.getString(OpsGenieConfiguration.RECIPIENTS, line))
+            .name(file.getString(OpsGenieChannel.NAME, line))
+            .apiKey(file.getString(OpsGenieConfiguration.API_KEY, line))
+            .teams(file.getString(OpsGenieConfiguration.TEAMS, line))
+            .tags(file.getString(OpsGenieConfiguration.TAGS, line))
+            .recipients(file.getString(OpsGenieConfiguration.RECIPIENTS, line))
             .build();
     }
 }

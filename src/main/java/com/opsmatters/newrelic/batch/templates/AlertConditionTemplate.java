@@ -25,7 +25,7 @@ import com.opsmatters.newrelic.api.model.alerts.conditions.TimeFunction;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertConditionTemplate extends Template
+public class AlertConditionTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -33,20 +33,65 @@ public class AlertConditionTemplate extends Template
     public static final String TYPE = "alert-condition";
 
     // The template columns
-    public TemplateColumn ALERT_POLICY = new TemplateColumn(AlertCondition.POLICY_NAME, "Alert Policy", true);
-    public TemplateColumn NAME = new TemplateColumn(AlertCondition.NAME, "Name", true);
-    public TemplateColumn CONDITION_TYPE = new TemplateColumn(AlertCondition.CONDITION_TYPE, "Condition Type", true);
-    public TemplateColumn CONDITION_SCOPE = new TemplateColumn(AlertCondition.CONDITION_SCOPE, "Condition Scope", true);
-    public TemplateColumn METRIC = new TemplateColumn(AlertCondition.METRIC, "Metric", true);
-    public TemplateColumn OPERATOR = new TemplateColumn(Term.OPERATOR, "Operator", true);
-    public TemplateColumn WARNING = new TemplateColumn(Term.WARNING_THRESHOLD, "Warning", true);
-    public TemplateColumn CRITICAL = new TemplateColumn(Term.CRITICAL_THRESHOLD, "Critical", true);
-    public TemplateColumn DURATION = new TemplateColumn(Term.DURATION, "Duration", true);
-    public TemplateColumn TIME_FUNCTION = new TemplateColumn(Term.TIME_FUNCTION, "Time Function", false, 
-        TimeFunction.ALL.value());
-    public TemplateColumn VIOLATION_CLOSE_TIMER = new TemplateColumn(AlertCondition.VIOLATION_CLOSE_TIMER, "Violation Close Timer", false, 
-        Integer.toString(AlertCondition.ViolationCloseTimerInterval.HOURS_24.value()));
-    public TemplateColumn APPLICATION_FILTER = new TemplateColumn(AlertCondition.APPLICATION_FILTER, "Application Filter", true);
+    public TemplateColumn ALERT_POLICY = TemplateColumn.builder()
+        .name(AlertCondition.POLICY_NAME)
+        .header("Alert Policy")
+        .build();
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(AlertCondition.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn CONDITION_TYPE = TemplateColumn.builder()
+        .name(AlertCondition.CONDITION_TYPE)
+        .header("Condition Type")
+        .build();
+    public TemplateColumn CONDITION_SCOPE = TemplateColumn.builder()
+        .name(AlertCondition.CONDITION_SCOPE)
+        .header("Condition Scope")
+        .build();
+    public TemplateColumn METRIC = TemplateColumn.builder()
+        .name(AlertCondition.METRIC)
+        .header("Metric")
+        .build();
+    public TemplateColumn OPERATOR = TemplateColumn.builder()
+        .name(Term.OPERATOR)
+        .header("Operator")
+        .build();
+    public TemplateColumn WARNING = TemplateColumn.builder()
+        .name(Term.WARNING_THRESHOLD)
+        .header("Warning")
+        .build();
+    public TemplateColumn CRITICAL = TemplateColumn.builder()
+        .name(Term.CRITICAL_THRESHOLD)
+        .header("Critical")
+        .build();
+    public TemplateColumn DURATION = TemplateColumn.builder()
+        .name(Term.DURATION)
+        .header("Duration")
+        .build();
+    public TemplateColumn TIME_FUNCTION = TemplateColumn.builder()
+        .name(Term.TIME_FUNCTION)
+        .header("Time Function")
+        .mandatory(false)
+        .defaultValue(TimeFunction.ALL.value())
+        .build();
+    public TemplateColumn VIOLATION_CLOSE_TIMER = TemplateColumn.builder()
+        .name(AlertCondition.VIOLATION_CLOSE_TIMER)
+        .header("Violation Close Timer")
+        .mandatory(false)
+        .defaultValue(Integer.toString(AlertCondition.ViolationCloseTimerInterval.HOURS_24.value()))
+        .build();
+    public TemplateColumn FILTER = TemplateColumn.builder()
+        .name(AlertCondition.FILTER)
+        .header("Filter")
+        .mandatory(false)
+        .output(false)
+        .build();
+    public TemplateColumn ENTITIES = TemplateColumn.builder()
+        .name(AlertCondition.ENTITIES)
+        .header("Entities")
+        .mandatory(false)
+        .build();
 
     /**
      * Default constructor.
@@ -55,7 +100,7 @@ public class AlertConditionTemplate extends Template
     {
         addColumn(ALERT_POLICY);
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(CONDITION_TYPE);
         addColumn(CONDITION_SCOPE);
         addColumn(METRIC);
@@ -65,7 +110,8 @@ public class AlertConditionTemplate extends Template
         addColumn(DURATION);
         addColumn(TIME_FUNCTION);
         addColumn(VIOLATION_CLOSE_TIMER);
-        addColumn(APPLICATION_FILTER);
+        addColumn(FILTER);
+        addColumn(ENTITIES);
     }
 
     /**

@@ -19,11 +19,11 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts alert policies from report lines.
@@ -45,7 +45,7 @@ public class AlertPolicyParser extends InputFileParser<AlertPolicy>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(AlertPolicyParser.class, template);
     }
@@ -75,15 +75,15 @@ public class AlertPolicyParser extends InputFileParser<AlertPolicy>
 
     /**
      * Reads the alert policy from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert policy created
      */
-    protected AlertPolicy create(TemplateInstance template, String[] line)
+    protected AlertPolicy create(FileInstance file, String[] line)
     {
         return AlertPolicy.builder()
-            .name(template.getString(AlertPolicy.NAME, line))
-            .incidentPreference(template.getString(AlertPolicy.INCIDENT_PREFERENCE, line))
+            .name(file.getString(AlertPolicy.NAME, line))
+            .incidentPreference(file.getString(AlertPolicy.INCIDENT_PREFERENCE, line))
             .build();
     }
 }

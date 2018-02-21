@@ -32,18 +32,18 @@ public class TemplateFactory
     private static final Logger logger = Logger.getLogger(TemplateFactory.class.getName());
 
     // The templates
-    private static final Map<Class,Template> templates = new HashMap<Class,Template>();
-    private static final Template alertPolicyTemplate = new AlertPolicyTemplate();
-    private static final Template emailChannelTemplate = new EmailChannelTemplate();
-    private static final Template slackChannelTemplate = new SlackChannelTemplate();
-    private static final Template hipchatChannelTemplate = new HipChatChannelTemplate();
-    private static final Template campfireChannelTemplate = new CampfireChannelTemplate();
-    private static final Template opsgenieChannelTemplate = new OpsGenieChannelTemplate();
-    private static final Template pagerdutyChannelTemplate = new PagerDutyChannelTemplate();
-    private static final Template userChannelTemplate = new UserChannelTemplate();
-    private static final Template victoropsChannelTemplate = new VictorOpsChannelTemplate();
-    private static final Template xmattersChannelTemplate = new xMattersChannelTemplate();
-    private static final Template alertConditionTemplate = new AlertConditionTemplate();
+    private static final Map<Class,FileTemplate> templates = new HashMap<Class,FileTemplate>();
+    private static final FileTemplate alertPolicyTemplate = new AlertPolicyTemplate();
+    private static final FileTemplate emailChannelTemplate = new EmailChannelTemplate();
+    private static final FileTemplate slackChannelTemplate = new SlackChannelTemplate();
+    private static final FileTemplate hipchatChannelTemplate = new HipChatChannelTemplate();
+    private static final FileTemplate campfireChannelTemplate = new CampfireChannelTemplate();
+    private static final FileTemplate opsgenieChannelTemplate = new OpsGenieChannelTemplate();
+    private static final FileTemplate pagerdutyChannelTemplate = new PagerDutyChannelTemplate();
+    private static final FileTemplate userChannelTemplate = new UserChannelTemplate();
+    private static final FileTemplate victoropsChannelTemplate = new VictorOpsChannelTemplate();
+    private static final FileTemplate xmattersChannelTemplate = new xMattersChannelTemplate();
+    private static final FileTemplate alertConditionTemplate = new AlertConditionTemplate();
 
     static
     {
@@ -84,7 +84,7 @@ public class TemplateFactory
      * @param c The class to be registered with the template
      * @param template The template to register the class with
      */
-    public static void registerTemplate(Class c, Template template)
+    public static void registerTemplate(Class c, FileTemplate template)
     {
         templates.put(c, template);
     }
@@ -94,9 +94,9 @@ public class TemplateFactory
      * @param c The class of the object for the template
      * @return The template for the class
      */
-    public static Template getTemplate(Class c)
+    public static FileTemplate getTemplate(Class c)
     {
-        Template ret = templates.get(c);
+        FileTemplate ret = templates.get(c);
         if(ret == null)
             throw new IllegalArgumentException("not a valid template type");
         return ret;

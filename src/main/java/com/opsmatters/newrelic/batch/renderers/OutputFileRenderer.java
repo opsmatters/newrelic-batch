@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.OutputFileWriter;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.core.documents.OutputFileWriter;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
@@ -42,8 +42,8 @@ public abstract class OutputFileRenderer<T>
     public void render(List<T> items, OutputFileWriter writer) throws IOException
     {
         List<String[]> lines = new ArrayList<String[]>();
-        Template template = TemplateFactory.getTemplate(getClass());
-        String[] headers = template.getHeaders();
+        FileTemplate template = TemplateFactory.getTemplate(getClass());
+        String[] headers = template.getOutputHeaders();
         lines.add(headers);
         for(T item : items)
             lines.add(serialize(template, item));
@@ -61,8 +61,25 @@ public abstract class OutputFileRenderer<T>
      * @param item The item to be serialized
      * @return The line representing the item
      */
-    protected String[] serialize(Template template, T item)
+    protected String[] serialize(FileTemplate template, T item)
     {
         return null;
+    }
+
+    /**
+     * Converts the given list to a comma-separated string.
+     * @param ids The list of ids to be serialized
+     * @return The comma-separated string representing the ids
+     */
+    protected String toList(List<Long> ids)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(Long id : ids)
+        {
+            if(sb.length() > 0)
+                sb.append(",");
+            sb.append(id);
+        }
+        return sb.toString();
     }
 }

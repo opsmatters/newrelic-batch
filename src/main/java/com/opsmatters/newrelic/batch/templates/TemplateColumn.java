@@ -25,33 +25,24 @@ public class TemplateColumn
 {
     private String name;
     private String header;
-    private boolean mandatory = false;
-    private String deflt;
+    private boolean mandatory = true;
+    private String defaultValue;
+    private boolean output = true;
 
     /**
-     * Constructor that takes a set of column attributes.
-     * @param name The name of the column
-     * @param header The header name of the column
-     * @param mandatory <CODE>true</CODE> if this column is mandatory
+     * Default constructor.
      */
-    TemplateColumn(String name, String header, boolean mandatory)
+    TemplateColumn()
     {
-        this(name, header, mandatory, null);
     }
 
     /**
-     * Constructor that takes a set of column attributes.
+     * Sets the name of the column.  
      * @param name The name of the column
-     * @param header The header name of the column
-     * @param mandatory <CODE>true</CODE> if this column is mandatory
-     * @param deflt The default value for the column if it is missing
      */
-    TemplateColumn(String name, String header, boolean mandatory, String deflt)
+    public void setName(String name)
     {
         this.name = name;
-        this.header = header;
-        this.mandatory = mandatory;
-        this.deflt = deflt;
     }
 
     /**
@@ -64,6 +55,15 @@ public class TemplateColumn
     }
 
     /**
+     * Sets the header name of the column.  
+     * @param header The header name of the column
+     */
+    public void setHeader(String header)
+    {
+        this.header = header;
+    }
+
+    /**
      * Returns the header name of the column.  
      * @return The header name of the column
      */
@@ -73,8 +73,17 @@ public class TemplateColumn
     }
 
     /**
-     * Returns <CODE>true</CODE> if this column is mandatory.  
-     * @return <CODE>true</CODE> if this column is mandatory
+     * Set to <CODE>true</CODE> if this column is mandatory in an input file.  
+     * @param mandatory <CODE>true</CODE> if this column is mandatory in an input file
+     */
+    public void setMandatory(boolean mandatory)
+    {
+        this.mandatory = mandatory;
+    }
+
+    /**
+     * Returns <CODE>true</CODE> if this column is mandatory in an input file.  
+     * @return <CODE>true</CODE> if this column is mandatory in an input file
      */
     public boolean isMandatory()
     {
@@ -82,12 +91,39 @@ public class TemplateColumn
     }
 
     /**
+     * Sets the default value of the column.  
+     * @param defaultValue The default value of the column
+     */
+    public void setDefaultValue(String defaultValue)
+    {
+        this.defaultValue = defaultValue;
+    }
+
+    /**
      * Returns the default value of the column.  
      * @return The default value of the column
      */
-    public String getDefault()
+    public String getDefaultValue()
     {
-        return deflt;
+        return defaultValue;
+    }
+
+    /**
+     * Set to <CODE>true</CODE> if this column should be written to an output file.  
+     * @param output <CODE>true</CODE> if this column this column should be written to an output file
+     */
+    public void setOutput(boolean output)
+    {
+        this.output = output;
+    }
+
+    /**
+     * Returns <CODE>true</CODE> if this column should be written to an output file.  
+     * @return <CODE>true</CODE> if this column should be written to an output file
+     */
+    public boolean isOutput()
+    {
+        return output;
     }
 
     /**
@@ -97,5 +133,86 @@ public class TemplateColumn
     public String toString()
     {
         return getName();
+    }
+
+    /**
+     * Returns a builder for the column.
+     * @return The builder instance.
+     */
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    /**
+     * Builder to make column construction easier.
+     */
+    public static class Builder
+    {
+        private TemplateColumn column = new TemplateColumn();
+
+        /**
+         * Sets the name of the column.
+         * @param name The name of the column
+         * @return This object
+         */
+        public Builder name(String name)
+        {
+            column.setName(name);
+            return this;
+        }
+
+        /**
+         * Sets the header name of the column.
+         * @param header The header name of the column
+         * @return This object
+         */
+        public Builder header(String header)
+        {
+            column.setHeader(header);
+            return this;
+        }
+
+        /**
+         * Set to <CODE>true</CODE> if this column is mandatory in an input file.  
+         * @param mandatory <CODE>true</CODE> if this column is mandatory in an input file
+         * @return This object
+         */
+        public Builder mandatory(boolean mandatory)
+        {
+            column.setMandatory(mandatory);
+            return this;
+        }
+
+        /**
+         * Sets the default value of the column.
+         * @param defaultValue The default value of the column
+         * @return This object
+         */
+        public Builder defaultValue(String defaultValue)
+        {
+            column.setDefaultValue(defaultValue);
+            return this;
+        }
+
+        /**
+         * Set to <CODE>true</CODE> if this column should be written to an output file.  
+         * @param output <CODE>true</CODE> if this column this column should be written to an output file
+         * @return This object
+         */
+        public Builder output(boolean output)
+        {
+            column.setOutput(output);
+            return this;
+        }
+
+        /**
+         * Returns the configured column instance
+         * @return The column instance
+         */
+        public TemplateColumn build()
+        {
+            return column;
+        }
     }
 }

@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.HipChatConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class HipChatChannelTemplate extends Template
+public class HipChatChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,9 +32,18 @@ public class HipChatChannelTemplate extends Template
     public static final String TYPE = "hipchat-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(HipChatChannel.NAME, "Name", true);
-    public TemplateColumn AUTH_TOKEN = new TemplateColumn(HipChatConfiguration.AUTH_TOKEN, "Auth Token", true);
-    public TemplateColumn ROOM_ID = new TemplateColumn(HipChatConfiguration.ROOM_ID, "Room ID", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(HipChatChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn AUTH_TOKEN = TemplateColumn.builder()
+        .name(HipChatConfiguration.AUTH_TOKEN)
+        .header("Auth Token")
+        .build();
+    public TemplateColumn ROOM_ID = TemplateColumn.builder()
+        .name(HipChatConfiguration.ROOM_ID)
+        .header("Room ID")
+        .build();
 
     /**
      * Default constructor.
@@ -42,7 +51,7 @@ public class HipChatChannelTemplate extends Template
     public HipChatChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(AUTH_TOKEN);
         addColumn(ROOM_ID);
     }

@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts VictorOps alert channels from report lines.
@@ -46,7 +46,7 @@ public class VictorOpsChannelParser extends InputFileParser<VictorOpsChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(VictorOpsChannelParser.class, template);
     }
@@ -76,16 +76,16 @@ public class VictorOpsChannelParser extends InputFileParser<VictorOpsChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected VictorOpsChannel create(TemplateInstance template, String[] line)
+    protected VictorOpsChannel create(FileInstance file, String[] line)
     {
         return VictorOpsChannel.builder()
-            .name(template.getString(VictorOpsChannel.NAME, line))
-            .key(template.getString(VictorOpsConfiguration.KEY, line))
-            .routeKey(template.getString(VictorOpsConfiguration.ROUTE_KEY, line))
+            .name(file.getString(VictorOpsChannel.NAME, line))
+            .key(file.getString(VictorOpsConfiguration.KEY, line))
+            .routeKey(file.getString(VictorOpsConfiguration.ROUTE_KEY, line))
             .build();
     }
 }

@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.UserConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class UserChannelTemplate extends Template
+public class UserChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,8 +32,14 @@ public class UserChannelTemplate extends Template
     public static final String TYPE = "user-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(UserChannel.NAME, "Name", true);
-    public TemplateColumn USER_ID = new TemplateColumn(UserConfiguration.USER_ID, "User ID", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(UserChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn USER_ID = TemplateColumn.builder()
+        .name(UserConfiguration.USER_ID)
+        .header("User ID")
+        .build();
 
     /**
      * Default constructor.
@@ -41,7 +47,7 @@ public class UserChannelTemplate extends Template
     public UserChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(USER_ID);
     }
 

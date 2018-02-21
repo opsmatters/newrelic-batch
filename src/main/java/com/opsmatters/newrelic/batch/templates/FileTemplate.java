@@ -18,22 +18,27 @@ package com.opsmatters.newrelic.batch.templates;
 
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
- * The base class for all templates.
+ * The base class for all file templates.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public abstract class Template
+public abstract class FileTemplate
 {
-    public static final TemplateColumn TYPE = new TemplateColumn("type", "Type", true);
+    public static final TemplateColumn TEMPLATE_TYPE = TemplateColumn.builder()
+        .name("template_type")
+        .header("Type")
+        .build();
 
     private Map<String,TemplateColumn> columns = new LinkedHashMap<String,TemplateColumn>();
 
     /**
      * Default constructor.
      */
-    public Template()
+    public FileTemplate()
     {
     }
 
@@ -74,16 +79,18 @@ public abstract class Template
     }
 
     /**
-     * Returns the template column headers.
-     * @return The template column headers
+     * Returns the template column headers for an output file.
+     * @return The template column headers for an output file
      */
-    public String[] getHeaders()
+    public String[] getOutputHeaders()
     {
-        int i = 0;
-        String[] ret = new String[columns.size()];
+        List<String> headers = new ArrayList<String>();
         for(TemplateColumn column : columns.values())
-            ret[i++] = column.getHeader();
-        return ret;
+        {
+            if(column.isOutput())
+                headers.add(column.getHeader());
+        }
+        return headers.toArray(new String[0]);
     }
 
     /**
@@ -91,8 +98,8 @@ public abstract class Template
      * @param headers The headers of the input file
      * @return The template created
      */
-    public TemplateInstance getInstance(String[] headers)
+    public FileInstance getInstance(String[] headers)
     {
-        return new TemplateInstance(this, headers);
+        return new FileInstance(this, headers);
     }  
 }

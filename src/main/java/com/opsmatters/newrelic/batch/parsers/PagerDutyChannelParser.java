@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts PagerDuty alert channels from report lines.
@@ -46,7 +46,7 @@ public class PagerDutyChannelParser extends InputFileParser<PagerDutyChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(PagerDutyChannelParser.class, template);
     }
@@ -76,15 +76,15 @@ public class PagerDutyChannelParser extends InputFileParser<PagerDutyChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected PagerDutyChannel create(TemplateInstance template, String[] line)
+    protected PagerDutyChannel create(FileInstance file, String[] line)
     {
         return PagerDutyChannel.builder()
-            .name(template.getString(PagerDutyChannel.NAME, line))
-            .serviceKey(template.getString(PagerDutyConfiguration.SERVICE_KEY, line))
+            .name(file.getString(PagerDutyChannel.NAME, line))
+            .serviceKey(file.getString(PagerDutyConfiguration.SERVICE_KEY, line))
             .build();
     }
 }

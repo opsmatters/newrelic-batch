@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts xMatters alert channels from report lines.
@@ -46,7 +46,7 @@ public class xMattersChannelParser extends InputFileParser<xMattersChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(xMattersChannelParser.class, template);
     }
@@ -76,16 +76,16 @@ public class xMattersChannelParser extends InputFileParser<xMattersChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected xMattersChannel create(TemplateInstance template, String[] line)
+    protected xMattersChannel create(FileInstance file, String[] line)
     {
         return xMattersChannel.builder()
-            .name(template.getString(xMattersChannel.NAME, line))
-            .url(template.getString(xMattersConfiguration.URL, line))
-            .channel(template.getString(xMattersConfiguration.CHANNEL, line))
+            .name(file.getString(xMattersChannel.NAME, line))
+            .url(file.getString(xMattersConfiguration.URL, line))
+            .channel(file.getString(xMattersConfiguration.CHANNEL, line))
             .build();
     }
 }

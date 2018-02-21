@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.HipChatChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.HipChatConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts HipChat alert channels from report lines.
@@ -46,7 +46,7 @@ public class HipChatChannelParser extends InputFileParser<HipChatChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(HipChatChannelParser.class, template);
     }
@@ -76,16 +76,16 @@ public class HipChatChannelParser extends InputFileParser<HipChatChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected HipChatChannel create(TemplateInstance template, String[] line)
+    protected HipChatChannel create(FileInstance file, String[] line)
     {
         return HipChatChannel.builder()
-            .name(template.getString(HipChatChannel.NAME, line))
-            .authToken(template.getString(HipChatConfiguration.AUTH_TOKEN, line))
-            .roomId(template.getString(HipChatConfiguration.ROOM_ID, line))
+            .name(file.getString(HipChatChannel.NAME, line))
+            .authToken(file.getString(HipChatConfiguration.AUTH_TOKEN, line))
+            .roomId(file.getString(HipChatConfiguration.ROOM_ID, line))
             .build();
     }
 }

@@ -39,6 +39,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
+import com.opsmatters.newrelic.api.model.applications.Application;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
 import com.opsmatters.newrelic.batch.parsers.SlackChannelParser;
@@ -60,9 +61,9 @@ import com.opsmatters.newrelic.batch.renderers.VictorOpsChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
-import com.opsmatters.core.reports.InputFileReader;
-import com.opsmatters.core.reports.OutputFileWriter;
-import com.opsmatters.core.reports.Workbook;
+import com.opsmatters.core.documents.InputFileReader;
+import com.opsmatters.core.documents.OutputFileWriter;
+import com.opsmatters.core.documents.Workbook;
 
 /**
  * The set of tests used for importing and exporting alert channels, policies and conditions.
@@ -135,8 +136,12 @@ public class AlertsTest
         List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(createdPolicies.size() == policies.size());
 
+        // Get the lists of policies and applications
+        List<AlertPolicy> allPolicies = manager.getAlertPolicies();
+        List<Application> allApplications = manager.getApplications();
+
         // Read the alert conditions
-        readAlertConditions(createdPolicies, config);
+        readAlertConditions(allPolicies, allApplications, config);
 
         List<AlertCondition> conditions = config.getAlertConditions();
         Assert.assertTrue(config.numAlertConditions() > 0);
@@ -919,7 +924,7 @@ public class AlertsTest
         }
     }
 
-    public void readAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    public void readAlertConditions(List<AlertPolicy> policies, List<Application> applications, AlertConfiguration config)
     {
         // Read the alert condition file
         logger.info("Loading alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
@@ -933,7 +938,7 @@ public class AlertsTest
                 .withInputStream(is)
                 .build();
 
-            List<AlertCondition> conditions = AlertConditionParser.parse(policies, reader);
+            List<AlertCondition> conditions = AlertConditionParser.parse(policies, applications, reader);
             logger.info("Read "+conditions.size()+" alert conditions");
             config.setAlertConditions(conditions);
         }

@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.OutputFileWriter;
+import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
@@ -46,7 +46,7 @@ public class OpsGenieChannelRenderer extends OutputFileRenderer<OpsGenieChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(OpsGenieChannelRenderer.class, template);
     }
@@ -64,10 +64,10 @@ public class OpsGenieChannelRenderer extends OutputFileRenderer<OpsGenieChannel>
 
     /**
      * Serializes the alert channel to a line.
-     * @param template The template with the columns
+     * @param template The file instance with the columns
      * @return The line representing the alert channel
      */
-    protected String[] serialize(Template template, OpsGenieChannel channel)
+    protected String[] serialize(FileTemplate template, OpsGenieChannel channel)
     {
         List<String> line = new ArrayList<String>();
         line.add(channel.getName());

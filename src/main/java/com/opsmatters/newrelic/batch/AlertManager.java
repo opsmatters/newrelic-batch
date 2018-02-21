@@ -24,6 +24,7 @@ import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
+import com.opsmatters.newrelic.api.model.applications.Application;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -89,6 +90,26 @@ public class AlertManager
     public NewRelicApi getApiClient()
     {
         return apiClient;
+    }
+
+    /**
+     * Returns the alert policies.
+     * @return The alert policies
+     */
+    public List<AlertPolicy> getAlertPolicies()
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Get the alert policies
+        logger.info("Getting the alert policies");
+        Collection<AlertPolicy> policies = apiClient.alertPolicies().list();
+        logger.info("Got "+policies.size()+" alert policies");
+
+        List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
+        ret.addAll(policies);
+        return ret;
     }
 
     /**
@@ -410,5 +431,25 @@ public class AlertManager
             apiClient.alertConditions().delete(condition.getId());
             logger.info("Deleted alert condition : "+condition.getId()+" - "+condition.getName());
         }
+    }
+
+    /**
+     * Returns the applications.
+     * @return The applications
+     */
+    public List<Application> getApplications()
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Get the applications
+        logger.info("Getting the applications");
+        Collection<Application> applications = apiClient.applications().list();
+        logger.info("Got "+applications.size()+" applications");
+
+        List<Application> ret = new ArrayList<Application>();
+        ret.addAll(applications);
+        return ret;
     }
 }

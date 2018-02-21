@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class OpsGenieChannelTemplate extends Template
+public class OpsGenieChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,11 +32,26 @@ public class OpsGenieChannelTemplate extends Template
     public static final String TYPE = "opsgenie-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(OpsGenieChannel.NAME, "Name", true);
-    public TemplateColumn API_KEY = new TemplateColumn(OpsGenieConfiguration.API_KEY, "API Key", true);
-    public TemplateColumn TEAMS = new TemplateColumn(OpsGenieConfiguration.TEAMS, "Teams", true);
-    public TemplateColumn TAGS = new TemplateColumn(OpsGenieConfiguration.TAGS, "Tags", true);
-    public TemplateColumn RECIPIENTS = new TemplateColumn(OpsGenieConfiguration.RECIPIENTS, "Recipients", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(OpsGenieChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn API_KEY = TemplateColumn.builder()
+        .name(OpsGenieConfiguration.API_KEY)
+        .header("API Key")
+        .build();
+    public TemplateColumn TEAMS = TemplateColumn.builder()
+        .name(OpsGenieConfiguration.TEAMS)
+        .header("Teams")
+        .build();
+    public TemplateColumn TAGS = TemplateColumn.builder()
+        .name(OpsGenieConfiguration.TAGS)
+        .header("Tags")
+        .build();
+    public TemplateColumn RECIPIENTS = TemplateColumn.builder()
+        .name(OpsGenieConfiguration.RECIPIENTS)
+        .header("Recipients")
+        .build();
 
     /**
      * Default constructor.
@@ -44,7 +59,7 @@ public class OpsGenieChannelTemplate extends Template
     public OpsGenieChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(API_KEY);
         addColumn(TEAMS);
         addColumn(TAGS);

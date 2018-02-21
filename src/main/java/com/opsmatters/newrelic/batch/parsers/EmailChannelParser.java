@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.EmailConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts email alert channels from report lines.
@@ -46,7 +46,7 @@ public class EmailChannelParser extends InputFileParser<EmailChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(EmailChannelParser.class, template);
     }
@@ -76,16 +76,16 @@ public class EmailChannelParser extends InputFileParser<EmailChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected EmailChannel create(TemplateInstance template, String[] line)
+    protected EmailChannel create(FileInstance file, String[] line)
     {
         return EmailChannel.builder()
-            .name(template.getString(EmailChannel.NAME, line))
-            .recipients(template.getString(EmailConfiguration.RECIPIENTS, line))
-            .includeJsonAttachment(template.getBoolean(EmailConfiguration.INCLUDE_JSON_ATTACHMENT, line))
+            .name(file.getString(EmailChannel.NAME, line))
+            .recipients(file.getString(EmailConfiguration.RECIPIENTS, line))
+            .includeJsonAttachment(file.getBoolean(EmailConfiguration.INCLUDE_JSON_ATTACHMENT, line))
             .build();
     }
 }

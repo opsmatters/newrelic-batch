@@ -20,12 +20,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.OutputFileWriter;
+import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyList;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
@@ -48,7 +48,7 @@ public class AlertConditionRenderer extends OutputFileRenderer<AlertCondition>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(AlertConditionRenderer.class, template);
     }
@@ -75,9 +75,9 @@ public class AlertConditionRenderer extends OutputFileRenderer<AlertCondition>
     public void render(List<AlertPolicy> policies, List<AlertCondition> conditions, OutputFileWriter writer) throws IOException
     {
         List<String[]> lines = new ArrayList<String[]>();
-        Template template = TemplateFactory.getTemplate(getClass());
+        FileTemplate template = TemplateFactory.getTemplate(getClass());
         AlertPolicyList policyList = new AlertPolicyList(policies);
-        String[] headers = template.getHeaders();
+        String[] headers = template.getOutputHeaders();
 
         lines.add(headers);
         for(AlertCondition condition : conditions)
@@ -101,7 +101,7 @@ public class AlertConditionRenderer extends OutputFileRenderer<AlertCondition>
      * @param condition The alert condition to be serialized
      * @return The line representing the alert condition
      */
-    protected String[] serialize(Template template, AlertPolicy policy, AlertCondition condition)
+    protected String[] serialize(FileTemplate template, AlertPolicy policy, AlertCondition condition)
     {
         List<Term> terms = condition.getTerms();
         if(terms.size() == 0)
@@ -123,7 +123,7 @@ public class AlertConditionRenderer extends OutputFileRenderer<AlertCondition>
         line.add(critical.getDuration());
         line.add(critical.getTimeFunction());
         line.add(Integer.toString(condition.getViolationCloseTimer()));
-//GERALD: entityIds
+        line.add(toList(condition.getEntities()));
         return line.toArray(new String[]{});
     }
 }

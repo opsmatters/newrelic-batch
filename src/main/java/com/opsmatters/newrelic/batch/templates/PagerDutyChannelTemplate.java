@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class PagerDutyChannelTemplate extends Template
+public class PagerDutyChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,8 +32,14 @@ public class PagerDutyChannelTemplate extends Template
     public static final String TYPE = "pagerduty-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(PagerDutyChannel.NAME, "Name", true);
-    public TemplateColumn SERVICE_KEY = new TemplateColumn(PagerDutyConfiguration.SERVICE_KEY, "Service Key", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(PagerDutyChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn SERVICE_KEY = TemplateColumn.builder()
+        .name(PagerDutyConfiguration.SERVICE_KEY)
+        .header("Service Key")
+        .build();
 
     /**
      * Default constructor.
@@ -41,7 +47,7 @@ public class PagerDutyChannelTemplate extends Template
     public PagerDutyChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(SERVICE_KEY);
     }
 

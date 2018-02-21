@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.UserChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.UserConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts user alert channels from report lines.
@@ -46,7 +46,7 @@ public class UserChannelParser extends InputFileParser<UserChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(UserChannelParser.class, template);
     }
@@ -76,15 +76,15 @@ public class UserChannelParser extends InputFileParser<UserChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected UserChannel create(TemplateInstance template, String[] line)
+    protected UserChannel create(FileInstance file, String[] line)
     {
         return UserChannel.builder()
-            .name(template.getString(UserChannel.NAME, line))
-            .userId(template.getString(UserConfiguration.USER_ID, line))
+            .name(file.getString(UserChannel.NAME, line))
+            .userId(file.getString(UserConfiguration.USER_ID, line))
             .build();
     }
 }

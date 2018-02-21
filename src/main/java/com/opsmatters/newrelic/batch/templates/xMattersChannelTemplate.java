@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.xMattersConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class xMattersChannelTemplate extends Template
+public class xMattersChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,9 +32,18 @@ public class xMattersChannelTemplate extends Template
     public static final String TYPE = "xmatters-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(xMattersChannel.NAME, "Name", true);
-    public TemplateColumn URL = new TemplateColumn(xMattersConfiguration.URL, "URL", true);
-    public TemplateColumn CHANNEL = new TemplateColumn(xMattersConfiguration.CHANNEL, "Channel", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(xMattersChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn URL = TemplateColumn.builder()
+        .name(xMattersConfiguration.URL)
+        .header("URL")
+        .build();
+    public TemplateColumn CHANNEL = TemplateColumn.builder()
+        .name(xMattersConfiguration.CHANNEL)
+        .header("Channel")
+        .build();
 
     /**
      * Default constructor.
@@ -42,7 +51,7 @@ public class xMattersChannelTemplate extends Template
     public xMattersChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(URL);
         addColumn(CHANNEL);
     }

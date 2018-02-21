@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.IncidentPreference;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertPolicyTemplate extends Template
+public class AlertPolicyTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,9 +32,16 @@ public class AlertPolicyTemplate extends Template
     public static final String TYPE = "alert-policy";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(AlertPolicy.NAME, "Name", true);
-    public TemplateColumn INCIDENT_PREFERENCE = new TemplateColumn(AlertPolicy.INCIDENT_PREFERENCE, "Incident Preference", false, 
-        IncidentPreference.PER_POLICY.name());
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(AlertPolicy.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn INCIDENT_PREFERENCE = TemplateColumn.builder()
+        .name(AlertPolicy.INCIDENT_PREFERENCE)
+        .header("Incident Preference")
+        .mandatory(false)
+        .defaultValue(IncidentPreference.PER_POLICY.name())
+        .build();
 
     /**
      * Default constructor.
@@ -42,7 +49,7 @@ public class AlertPolicyTemplate extends Template
     public AlertPolicyTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(INCIDENT_PREFERENCE);
     }
 

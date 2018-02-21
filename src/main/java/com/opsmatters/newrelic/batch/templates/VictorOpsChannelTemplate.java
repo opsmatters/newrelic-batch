@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class VictorOpsChannelTemplate extends Template
+public class VictorOpsChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,9 +32,18 @@ public class VictorOpsChannelTemplate extends Template
     public static final String TYPE = "victorops-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(VictorOpsChannel.NAME, "Name", true);
-    public TemplateColumn KEY = new TemplateColumn(VictorOpsConfiguration.KEY, "Key", true);
-    public TemplateColumn ROUTE_KEY = new TemplateColumn(VictorOpsConfiguration.ROUTE_KEY, "Route Key", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(VictorOpsChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn KEY = TemplateColumn.builder()
+        .name(VictorOpsConfiguration.KEY)
+        .header("Key")
+        .build();
+    public TemplateColumn ROUTE_KEY = TemplateColumn.builder()
+        .name(VictorOpsConfiguration.ROUTE_KEY)
+        .header("Route Key")
+        .build();
 
     /**
      * Default constructor.
@@ -42,7 +51,7 @@ public class VictorOpsChannelTemplate extends Template
     public VictorOpsChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(KEY);
         addColumn(ROUTE_KEY);
     }

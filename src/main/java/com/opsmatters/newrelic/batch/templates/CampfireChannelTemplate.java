@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.CampfireConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class CampfireChannelTemplate extends Template
+public class CampfireChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,10 +32,22 @@ public class CampfireChannelTemplate extends Template
     public static final String TYPE = "campfire-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(CampfireChannel.NAME, "Name", true);
-    public TemplateColumn SUBDOMAIN = new TemplateColumn(CampfireConfiguration.SUBDOMAIN, "Subdomain", true);
-    public TemplateColumn TOKEN = new TemplateColumn(CampfireConfiguration.TOKEN, "Token", true);
-    public TemplateColumn ROOM = new TemplateColumn(CampfireConfiguration.ROOM, "Room", true);
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(CampfireChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn SUBDOMAIN = TemplateColumn.builder()
+        .name(CampfireConfiguration.SUBDOMAIN)
+        .header("Subdomain")
+        .build();
+    public TemplateColumn TOKEN = TemplateColumn.builder()
+        .name(CampfireConfiguration.TOKEN)
+        .header("Token")
+        .build();
+    public TemplateColumn ROOM = TemplateColumn.builder()
+        .name(CampfireConfiguration.ROOM)
+        .header("Room")
+        .build();
 
     /**
      * Default constructor.
@@ -43,7 +55,7 @@ public class CampfireChannelTemplate extends Template
     public CampfireChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(SUBDOMAIN);
         addColumn(TOKEN);
         addColumn(ROOM);

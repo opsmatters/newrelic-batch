@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.OutputFileWriter;
+import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.SlackConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
@@ -46,7 +46,7 @@ public class SlackChannelRenderer extends OutputFileRenderer<SlackChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(SlackChannelRenderer.class, template);
     }
@@ -67,7 +67,7 @@ public class SlackChannelRenderer extends OutputFileRenderer<SlackChannel>
      * @param template The template with the columns
      * @return The line representing the alert channel
      */
-    protected String[] serialize(Template template, SlackChannel channel)
+    protected String[] serialize(FileTemplate template, SlackChannel channel)
     {
         List<String> line = new ArrayList<String>();
         line.add(channel.getName());

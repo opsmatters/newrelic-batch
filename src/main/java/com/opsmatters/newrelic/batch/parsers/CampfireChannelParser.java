@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.CampfireChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.CampfireConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts Campfire alert channels from report lines.
@@ -46,7 +46,7 @@ public class CampfireChannelParser extends InputFileParser<CampfireChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(CampfireChannelParser.class, template);
     }
@@ -76,17 +76,17 @@ public class CampfireChannelParser extends InputFileParser<CampfireChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected CampfireChannel create(TemplateInstance template, String[] line)
+    protected CampfireChannel create(FileInstance file, String[] line)
     {
         return CampfireChannel.builder()
-            .name(template.getString(CampfireChannel.NAME, line))
-            .subdomain(template.getString(CampfireConfiguration.SUBDOMAIN, line))
-            .token(template.getString(CampfireConfiguration.TOKEN, line))
-            .room(template.getString(CampfireConfiguration.ROOM, line))
+            .name(file.getString(CampfireChannel.NAME, line))
+            .subdomain(file.getString(CampfireConfiguration.SUBDOMAIN, line))
+            .token(file.getString(CampfireConfiguration.TOKEN, line))
+            .room(file.getString(CampfireConfiguration.ROOM, line))
             .build();
     }
 }

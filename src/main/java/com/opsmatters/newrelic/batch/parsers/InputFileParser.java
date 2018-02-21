@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * The base class for all input file parsers.
@@ -40,20 +40,20 @@ public abstract class InputFileParser<T> extends BaseParser
     protected List<T> get(String[] headers, List<String[]> lines)
     {
         List<T> ret = new ArrayList<T>();
-        TemplateInstance template = TemplateFactory.getTemplate(getClass()).getInstance(headers);
-        logger.info("Processing "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
+        logger.info("Processing "+file.getType()+" file: headers="+headers.length+" lines="+lines.size());
 
-        template.checkColumns();
+        file.checkColumns();
         for(String[] line : lines)
         {
-            // Check that the line matches the template type
-            if(!template.matches(line))
+            // Check that the line matches the file type
+            if(!file.matches(line))
             {
-                logger.severe("found illegal line in "+template.getType()+" file: "+template.getType(line));
+                logger.severe("found illegal line in "+file.getType()+" file: "+file.getType(line));
                 continue;
             }
 
-            ret.add(create(template, line));
+            ret.add(create(file, line));
         }
 
         return ret;
@@ -61,9 +61,9 @@ public abstract class InputFileParser<T> extends BaseParser
 
     /**
      * Creates the item from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The item created
      */
-    protected abstract T create(TemplateInstance template, String[] line);
+    protected abstract T create(FileInstance file, String[] line);
 }

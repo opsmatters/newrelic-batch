@@ -19,12 +19,12 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import com.opsmatters.core.reports.InputFileReader;
+import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.SlackConfiguration;
-import com.opsmatters.newrelic.batch.templates.Template;
+import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
-import com.opsmatters.newrelic.batch.templates.TemplateInstance;
+import com.opsmatters.newrelic.batch.templates.FileInstance;
 
 /**
  * Parser that converts Slack alert channels from report lines.
@@ -46,7 +46,7 @@ public class SlackChannelParser extends InputFileParser<SlackChannel>
      * Register this class with the given template.
      * @param template The template to register with this class
      */
-    public static void registerTemplate(Template template)
+    public static void registerTemplate(FileTemplate template)
     {
         TemplateFactory.registerTemplate(SlackChannelParser.class, template);
     }
@@ -76,16 +76,16 @@ public class SlackChannelParser extends InputFileParser<SlackChannel>
 
     /**
      * Reads the alert channel from the given line.
-     * @param template The template with the columns
+     * @param file The file instance with the columns
      * @param line The input file line
      * @return The alert channel created
      */
-    protected SlackChannel create(TemplateInstance template, String[] line)
+    protected SlackChannel create(FileInstance file, String[] line)
     {
         return SlackChannel.builder()
-            .name(template.getString(SlackChannel.NAME, line))
-            .url(template.getString(SlackConfiguration.URL, line))
-            .channel(template.getString(SlackConfiguration.CHANNEL, line))
+            .name(file.getString(SlackChannel.NAME, line))
+            .url(file.getString(SlackConfiguration.URL, line))
+            .channel(file.getString(SlackConfiguration.CHANNEL, line))
             .build();
     }
 }

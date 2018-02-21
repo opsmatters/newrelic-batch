@@ -24,7 +24,7 @@ import com.opsmatters.newrelic.api.model.alerts.channels.EmailConfiguration;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class EmailChannelTemplate extends Template
+public class EmailChannelTemplate extends FileTemplate
 {
     /**
      * The type of the template.  
@@ -32,9 +32,20 @@ public class EmailChannelTemplate extends Template
     public static final String TYPE = "email-channel";
 
     // The template columns
-    public TemplateColumn NAME = new TemplateColumn(EmailChannel.NAME, "Name", true);
-    public TemplateColumn RECIPIENTS = new TemplateColumn(EmailConfiguration.RECIPIENTS, "Recipients", true);
-    public TemplateColumn INCLUDE_JSON_ATTACHMENT = new TemplateColumn(EmailConfiguration.INCLUDE_JSON_ATTACHMENT, "Include JSON Attachment", false, "true");
+    public TemplateColumn NAME = TemplateColumn.builder()
+        .name(EmailChannel.NAME)
+        .header("Name")
+        .build();
+    public TemplateColumn RECIPIENTS = TemplateColumn.builder()
+        .name(EmailConfiguration.RECIPIENTS)
+        .header("Recipients")
+        .build();
+    public TemplateColumn INCLUDE_JSON_ATTACHMENT = TemplateColumn.builder()
+        .name(EmailConfiguration.INCLUDE_JSON_ATTACHMENT)
+        .header("Include JSON Attachment")
+        .mandatory(false)
+        .defaultValue("true")
+        .build();
 
     /**
      * Default constructor.
@@ -42,7 +53,7 @@ public class EmailChannelTemplate extends Template
     public EmailChannelTemplate()
     {
         addColumn(NAME);
-        addColumn(Template.TYPE);
+        addColumn(TEMPLATE_TYPE);
         addColumn(RECIPIENTS);
         addColumn(INCLUDE_JSON_ATTACHMENT);
     }
