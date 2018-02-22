@@ -19,6 +19,7 @@ package com.opsmatters.newrelic.batch.parsers;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+import com.opsmatters.newrelic.api.model.IdResource;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 import com.opsmatters.newrelic.batch.templates.FileInstance;
 
@@ -66,4 +67,51 @@ public abstract class InputFileParser<T> extends BaseParser
      * @return The item created
      */
     protected abstract T create(FileInstance file, String[] line);
+
+    /**
+     * Converts the given comma-separated string to a list of ids.
+     * @param str The comma-separated string
+     * @return The list of of ids
+     */
+    protected List<Long> toIdList(String str)
+    {
+        List<Long> ret = new ArrayList<Long>();
+
+        String[] tokens = str.split(",");
+        for(String token : tokens)
+        {
+            token = token.trim();
+            if(token.length() > 0)
+            {
+                try
+                {
+                    ret.add(Long.valueOf(token));
+                }
+                catch(NumberFormatException e)
+                {
+                    return null; // Fail fast on an invalid id
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Converts the given resource list to a list of ids.
+     * @param items The resource list
+     * @return The list of of ids
+     */
+    protected List<Long> toIdList(List<? extends IdResource> items)
+    {
+        List<Long> ret = new ArrayList<Long>();
+
+        for(IdResource item : items)
+        {
+            if(item.getId() != null)
+                ret.add(item.getId());
+        }
+
+        return ret;
+    }
 }

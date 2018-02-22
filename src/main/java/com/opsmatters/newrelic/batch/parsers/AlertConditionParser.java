@@ -130,8 +130,11 @@ public class AlertConditionParser extends InputFileParser<AlertCondition>
 
             // Add entity ids
             String filter = file.getString(AlertCondition.FILTER, line);
-            for(Application application : applicationList.list(filter))
-                condition.addEntity(application.getId());
+            String entities = file.getString(AlertCondition.ENTITIES, line);
+            if(filter != null)
+                condition.setEntities(toIdList(applicationList.list(filter)));
+            else if(entities != null)
+                condition.setEntities(toIdList(entities));
 
             ret.add(condition);
         }

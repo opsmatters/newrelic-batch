@@ -123,7 +123,7 @@ public class AlertConditionRenderer extends OutputFileRenderer<AlertCondition>
         line.add(critical.getDuration());
         line.add(critical.getTimeFunction());
         line.add(Integer.toString(condition.getViolationCloseTimer()));
-        line.add(toList(condition.getEntities()));
+        line.add(fromIdList(condition.getEntities()));
         return line.toArray(new String[]{});
     }
 }

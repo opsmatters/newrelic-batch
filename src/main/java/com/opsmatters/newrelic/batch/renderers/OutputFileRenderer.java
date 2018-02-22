@@ -67,11 +67,11 @@ public abstract class OutputFileRenderer<T>
     }
 
     /**
-     * Converts the given list to a comma-separated string.
+     * Converts the given list of ids to a comma-separated string.
      * @param ids The list of ids to be serialized
      * @return The comma-separated string representing the ids
      */
-    protected String toList(List<Long> ids)
+    protected String fromIdList(List<Long> ids)
     {
         StringBuilder sb = new StringBuilder();
         for(Long id : ids)
