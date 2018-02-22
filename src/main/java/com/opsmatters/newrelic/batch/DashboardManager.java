@@ -90,6 +90,26 @@ public class DashboardManager
     }
 
     /**
+     * Returns the dashboards.
+     * @return The dashboards
+     */
+    public List<Dashboard> getDashboards()
+    {
+        checkInitialize();
+        if(!isInitialized())
+            throw new IllegalStateException("client not initialized");
+
+        // Get the dashboards
+        logger.info("Getting the dashboards");
+        Collection<Dashboard> dashboards = apiClient.dashboards().list();
+        logger.info("Got "+dashboards.size()+" dashboards");
+
+        List<Dashboard> ret = new ArrayList<Dashboard>();
+        ret.addAll(dashboards);
+        return ret;
+    }
+
+    /**
      * Creates the given dashboards.
      * @param dashboards The dashboards to create
      * @return The created dashboards
