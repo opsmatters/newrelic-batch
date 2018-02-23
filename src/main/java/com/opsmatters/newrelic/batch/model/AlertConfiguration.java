@@ -34,6 +34,10 @@ import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraMetricAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraProcessRunningAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraHostNotReportingAlertCondition;
 
 /**
  * Represents a set of alert policies, conditions and channels.
@@ -49,6 +53,7 @@ public class AlertConfiguration
     private List<AlertCondition> alertConditions = new ArrayList<AlertCondition>();
     private List<ExternalServiceAlertCondition> externalServiceConditions = new ArrayList<ExternalServiceAlertCondition>();
     private List<NrqlAlertCondition> nrqlConditions = new ArrayList<NrqlAlertCondition>();
+    private List<InfraAlertCondition> infraConditions = new ArrayList<InfraAlertCondition>();
 
     /**
      * Default constructor.
@@ -393,6 +398,88 @@ public class AlertConfiguration
     }
 
     /**
+     * Replaces the infrastructure alert conditions with the given set of alert conditions.
+     * @param infraConditions The set of infrastructure alert conditions
+     */
+    public void setInfraAlertConditions(List<InfraAlertCondition> infraConditions)
+    {
+        this.infraConditions.clear();
+        this.infraConditions.addAll(infraConditions);
+    }
+
+    /**
+     * Adds the given infrastructure alert conditions to the current set of conditions.
+     * @param infraConditions The infrastructure alert conditions to add
+     */
+    public void addInfraAlertConditions(List<? extends InfraAlertCondition> infraConditions)
+    {
+        this.infraConditions.addAll(infraConditions);
+    }
+
+    /**
+     * Returns the set of infrastructure alert conditions.
+     * @return The set of infrastructure alert conditions
+     */
+    public List<InfraAlertCondition> getInfraAlertConditions()
+    {
+        return infraConditions;
+    }
+
+    /**
+     * Returns the set of infrastructure metric alert conditions.
+     * @return The set of infrastructure metric alert conditions
+     */
+    public List<InfraMetricAlertCondition> getInfraMetricAlertConditions()
+    {
+        List<InfraMetricAlertCondition> conditions = new ArrayList<InfraMetricAlertCondition>();
+        for(InfraAlertCondition condition : this.infraConditions)
+        {
+            if(condition instanceof InfraMetricAlertCondition)
+                conditions.add((InfraMetricAlertCondition)condition);
+        }
+        return conditions;
+    }
+
+    /**
+     * Returns the set of infrastructure process alert conditions.
+     * @return The set of infrastructure process alert conditions
+     */
+    public List<InfraProcessRunningAlertCondition> getInfraProcessRunningAlertConditions()
+    {
+        List<InfraProcessRunningAlertCondition> conditions = new ArrayList<InfraProcessRunningAlertCondition>();
+        for(InfraAlertCondition condition : this.infraConditions)
+        {
+            if(condition instanceof InfraProcessRunningAlertCondition)
+                conditions.add((InfraProcessRunningAlertCondition)condition);
+        }
+        return conditions;
+    }
+
+    /**
+     * Returns the set of infrastructure host alert conditions.
+     * @return The set of infrastructure host alert conditions
+     */
+    public List<InfraHostNotReportingAlertCondition> getInfraHostNotReportingAlertConditions()
+    {
+        List<InfraHostNotReportingAlertCondition> conditions = new ArrayList<InfraHostNotReportingAlertCondition>();
+        for(InfraAlertCondition condition : this.infraConditions)
+        {
+            if(condition instanceof InfraHostNotReportingAlertCondition)
+                conditions.add((InfraHostNotReportingAlertCondition)condition);
+        }
+        return conditions;
+    }
+
+    /**
+     * Returns the number of infrastructure alert conditions.
+     * @return The number of infrastructure alert conditions
+     */
+    public int numInfraAlertConditions()
+    {
+        return infraConditions.size();
+    }
+
+    /**
      * Returns a string representation of the object.
      */
     @Override
@@ -403,6 +490,7 @@ public class AlertConfiguration
             +", alertConditions="+alertConditions.size()
             +", externalServiceConditions="+externalServiceConditions.size()
             +", nrqlConditions="+nrqlConditions.size()
+            +", infraConditions="+infraConditions.size()
             +"]";
     }
 }

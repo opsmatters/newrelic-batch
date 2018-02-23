@@ -21,12 +21,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.NewRelicApi;
+import com.opsmatters.newrelic.api.NewRelicInfraApi;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.BaseCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
 import com.opsmatters.newrelic.api.model.applications.Application;
 import com.opsmatters.newrelic.api.model.servers.Server;
 
@@ -41,6 +43,7 @@ public class AlertManager
 
     private String apiKey;
     private NewRelicApi apiClient;
+    private NewRelicInfraApi infraApiClient;
     private boolean initialized = false;
 
     /**
@@ -75,6 +78,7 @@ public class AlertManager
 
         logger.info("Initialising the client");
         apiClient = NewRelicApi.builder().apiKey(apiKey).build();
+        infraApiClient = NewRelicInfraApi.builder().apiKey(apiKey).build();
         logger.info("Initialised the clients");
 
         initialized = true;
@@ -96,6 +100,15 @@ public class AlertManager
     public NewRelicApi getApiClient()
     {
         return apiClient;
+    }
+
+    /**
+     * Returns the Infrastructure API client.
+     * @return the Infrastructure API client 
+     */
+    public NewRelicInfraApi getInfraApiClient()
+    {
+        return infraApiClient;
     }
 
     /**
@@ -618,7 +631,108 @@ public class AlertManager
         {
             logger.info("Deleting NRQL alert condition: "+condition.getId());
             apiClient.nrqlAlertConditions().delete(condition.getId());
-            logger.info("Deleted NRQL alert condition : "+condition.getId()+" - "+condition.getName());
+            logger.info("Deleted i alert condition : "+condition.getId()+" - "+condition.getName());
+        }
+    }
+
+    /**
+     * Creates the given infrastructure alert conditions.
+     * @param conditions The infrastructure alert conditions to create
+     * @return The created infrastructure alert conditions
+     */
+    public List<InfraAlertCondition> createInfraAlertConditions(List<InfraAlertCondition> conditions)
+    {
+        if(conditions == null)
+            throw new IllegalArgumentException("null conditions");
+
+        checkInitialize();
+
+        // Create the conditions
+        List<InfraAlertCondition> ret = new ArrayList<InfraAlertCondition>();
+        logger.info("Creating "+conditions.size()+" infra alert conditions");
+        for(InfraAlertCondition condition : conditions)
+        {
+            logger.info("Creating infra alert condition: "+condition.getName());
+            checkPolicyId(condition);
+            condition = infraApiClient.infraAlertConditions().create(condition).get();
+            logger.info("Created infra alert condition: "+condition.getId()+" - "+condition.getName());
+            ret.add(condition);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Create the infrastructure given alert condition.
+     * @param condition The infrastructure alert condition to create
+     * @return The created infrastructure alert condition
+     */
+    public InfraAlertCondition createInfraAlertCondition(InfraAlertCondition condition)
+    {
+        checkInitialize();
+
+        // Create the condition
+        logger.info("Creating infra alert condition: "+condition.getName());
+        checkPolicyId(condition);
+        condition = infraApiClient.infraAlertConditions().create(condition).get();
+        logger.info("Created infra alert condition: "+condition.getId()+" - "+condition.getName());
+
+        return condition;
+    }
+
+    /**
+     * Delete the given infra alert conditions.
+     * @param conditions The infra alert conditions to delete
+     * @return The deleted infra alert conditions
+     */
+    public List<InfraAlertCondition> deleteInfraAlertConditions(List<InfraAlertCondition> conditions)
+    {
+        if(conditions == null)
+            throw new IllegalArgumentException("null conditions");
+
+        checkInitialize();
+
+        // Delete the conditions
+        List<InfraAlertCondition> ret = new ArrayList<InfraAlertCondition>();
+        for(InfraAlertCondition condition : conditions)
+        {
+            checkPolicyId(condition);
+            deleteInfraAlertConditions(condition.getPolicyId(), condition.getName());
+            ret.add(condition);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Delete the given infrastructure alert condition.
+     * @param condition The infrastructure alert condition to delete
+     * @return The deleted infrastructure alert condition
+     */
+    public InfraAlertCondition deleteInfraAlertCondition(InfraAlertCondition condition)
+    {
+        checkInitialize();
+
+        // Delete the condition
+        checkPolicyId(condition);
+        deleteInfraAlertConditions(condition.getPolicyId(), condition.getName());
+
+        return condition;
+    }
+
+    /**
+     * Delete the infrastructure alert conditions with the given name.
+     * @param policyId The id of the policy to delete the infrastructure alert conditions from
+     * @param name The name of the infrastructure alert conditions
+     */
+    private void deleteInfraAlertConditions(long policyId, String name)
+    {
+        Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policyId, name);
+        for(InfraAlertCondition condition : conditions)
+        {
+            logger.info("Deleting infra alert condition: "+condition.getId());
+            infraApiClient.infraAlertConditions().delete(condition.getId());
+            logger.info("Deleted infra alert condition : "+condition.getId()+" - "+condition.getName());
         }
     }
 

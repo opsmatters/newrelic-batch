@@ -18,9 +18,6 @@ package com.opsmatters.newrelic.batch.parsers;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.logging.Logger;
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyList;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
 import com.opsmatters.newrelic.api.model.alerts.conditions.TermsCondition;
 import com.opsmatters.newrelic.api.model.alerts.Priority;
@@ -31,32 +28,13 @@ import com.opsmatters.newrelic.batch.templates.FileInstance;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public abstract class TermsConditionParser<T extends TermsCondition> extends InputFileParser<T>
+public abstract class TermsConditionParser<T extends TermsCondition> extends BaseConditionParser<T>
 {
-    private static final Logger logger = Logger.getLogger(TermsConditionParser.class.getName());
-
     /**
      * Protected constructor.
      */
     protected TermsConditionParser()
     {
-    }
-
-    /**
-     * Sets the policy id of the given condition.
-     * @param condition The condition to be set
-     * @param policyList The list of alert policies
-     * @param policyName The name of the alert policy for the condition
-     * @throws IllegalStateException if the policy is null or the id of the policy is null or empty
-     */
-    protected void setPolicyId(T condition, AlertPolicyList policyList, String policyName)
-    {
-        AlertPolicy policy = policyList.get(policyName);
-        if(policy == null)
-            throw new IllegalStateException("unable to find policy \""+policyName+"\" for alert condition: "+condition.getName());
-        if(policy.getId() == null || policy.getId() == 0L)
-            throw new IllegalStateException("missing policy_id: "+policy.getName());
-        condition.setPolicyId(policy.getId());
     }
 
     /**

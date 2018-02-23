@@ -16,7 +16,6 @@
 
 package com.opsmatters.newrelic.batch.parsers;
 
-import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.model.alerts.conditions.MetricCondition;
 import com.opsmatters.newrelic.api.model.EntityList;
 
@@ -27,8 +26,6 @@ import com.opsmatters.newrelic.api.model.EntityList;
  */
 public abstract class MetricConditionParser<T extends MetricCondition> extends TermsConditionParser<T>
 {
-    private static final Logger logger = Logger.getLogger(MetricConditionParser.class.getName());
-
     /**
      * Protected constructor.
      */

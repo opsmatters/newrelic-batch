@@ -42,6 +42,8 @@ import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraMetricAlertCondition;
 import com.opsmatters.newrelic.api.model.Entity;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
@@ -55,6 +57,7 @@ import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.ExternalServiceAlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.NrqlAlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.InfraMetricAlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
@@ -67,6 +70,7 @@ import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.ExternalServiceAlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.NrqlAlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.InfraMetricAlertConditionRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
 import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.core.documents.OutputFileWriter;
@@ -100,6 +104,7 @@ public class AlertsTest
     private static final String ALERT_CONDITION_TAB = "alert conditions";
     private static final String EXTERNAL_SERVICE_CONDITION_TAB = "external service conditions";
     private static final String NRQL_CONDITION_TAB = "nrql conditions";
+    private static final String INFRA_METRIC_CONDITION_TAB = "infra metric conditions";
 
     @Test
     public void testNewRelicAlerts()
@@ -155,6 +160,7 @@ public class AlertsTest
         readAlertConditions(allPolicies, entities, config);
         readExternalServiceAlertConditions(allPolicies, entities, config);
         readNrqlAlertConditions(allPolicies, config);
+        readInfraMetricAlertConditions(allPolicies, config);
 
         // Get the alert conditions
         List<AlertCondition> conditions = config.getAlertConditions();
@@ -163,6 +169,8 @@ public class AlertsTest
         Assert.assertTrue(config.numExternalServiceAlertConditions() > 0);
         List<NrqlAlertCondition> nrqlConditions = config.getNrqlAlertConditions();
         Assert.assertTrue(config.numNrqlAlertConditions() > 0);
+        List<InfraAlertCondition> infraConditions = config.getInfraAlertConditions();
+        Assert.assertTrue(config.numInfraAlertConditions() > 0);
 
         // Create the new alert conditions
         List<AlertCondition> createdConditions = manager.createAlertConditions(config.getAlertConditions());
@@ -171,6 +179,8 @@ public class AlertsTest
         Assert.assertTrue(createdExternalServiceConditions.size() == externalServiceConditions.size());
         List<NrqlAlertCondition> createdNrqlConditions = manager.createNrqlAlertConditions(config.getNrqlAlertConditions());
         Assert.assertTrue(createdNrqlConditions.size() == nrqlConditions.size());
+        List<InfraAlertCondition> createdInfraConditions = manager.createInfraAlertConditions(config.getInfraAlertConditions());
+        Assert.assertTrue(createdInfraConditions.size() == infraConditions.size());
 
         // Write the alert configuration
         writeEmailChannels(config);
@@ -185,6 +195,7 @@ public class AlertsTest
         writeAlertConditions(allPolicies, config);
         writeExternalServiceAlertConditions(allPolicies, config);
         writeNrqlAlertConditions(allPolicies, config);
+        writeInfraMetricAlertConditions(allPolicies, config);
 
         logger.info("Completed test: "+testName);
     }
@@ -1180,6 +1191,90 @@ public class AlertsTest
         catch(IOException e)
         {
             logger.severe("Unable to write nrql alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readInfraMetricAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        // Read the alert condition file
+        logger.info("Loading infra metric alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+INFRA_METRIC_CONDITION_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(INFRA_METRIC_CONDITION_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<InfraMetricAlertCondition> conditions = InfraMetricAlertConditionParser.parse(policies, reader);
+            logger.info("Read "+conditions.size()+" infra metric alert conditions");
+            config.addInfraAlertConditions(conditions);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find infra metric alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeInfraMetricAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        List<InfraMetricAlertCondition> conditions = config.getInfraMetricAlertConditions();
+
+        // Write the new conditions to a new tab
+        logger.info("Writing infra metric alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+INFRA_METRIC_CONDITION_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(INFRA_METRIC_CONDITION_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            InfraMetricAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" infra metric alert conditions");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write infra metric alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
         catch(Exception e)
         {

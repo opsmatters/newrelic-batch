@@ -119,23 +119,31 @@ public class FileInstance
 
     /**
      * Returns the boolean value of the given column in the given line.
+     * <P>
+     * Returns null if the given column is not present or is empty.
+     * </P>
      * @param name The name of the column
      * @param line The line of the file
      * @return The value of the column from the line
      */
     public Boolean getBoolean(String name, String[] line)
     {
-        return Boolean.valueOf(getString(name, line));
+        String str = getString(name, line);
+        return str != null && str.length() > 0 ? Boolean.valueOf(str) : null;
     }
 
     /**
      * Returns the integer value of the given column in the given line.
+     * <P>
+     * Returns null if the given column is not present or is empty.
+     * </P>
      * @param name The name of the column
      * @param line The line of the file
      * @return The value of the column from the line
      */
     public Integer getInteger(String name, String[] line)
     {
-        return Integer.valueOf(getString(name, line));
+        String str = getString(name, line);
+        return str != null && str.length() > 0 ? Integer.valueOf(str) : null;
     }
 }
