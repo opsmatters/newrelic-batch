@@ -22,24 +22,24 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.conditions.InfraMetricAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraProcessRunningAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertThreshold;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
- * Renderer that converts infrastructure metric alert conditions to a text file.
+ * Renderer that converts infrastructure process running alert conditions to a text file.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class InfraMetricAlertConditionRenderer extends BaseConditionRenderer<InfraMetricAlertCondition>
+public class InfraProcessRunningAlertConditionRenderer extends BaseConditionRenderer<InfraProcessRunningAlertCondition>
 {
-    private static final Logger logger = Logger.getLogger(InfraMetricAlertConditionRenderer.class.getName());
+    private static final Logger logger = Logger.getLogger(InfraProcessRunningAlertConditionRenderer.class.getName());
 
     /**
      * Private constructor.
      */
-    private InfraMetricAlertConditionRenderer()
+    private InfraProcessRunningAlertConditionRenderer()
     {
     }
 
@@ -49,7 +49,7 @@ public class InfraMetricAlertConditionRenderer extends BaseConditionRenderer<Inf
      */
     public static void registerTemplate(FileTemplate template)
     {
-        TemplateFactory.registerTemplate(InfraMetricAlertConditionRenderer.class, template);
+        TemplateFactory.registerTemplate(InfraProcessRunningAlertConditionRenderer.class, template);
     }
 
     /**
@@ -59,9 +59,9 @@ public class InfraMetricAlertConditionRenderer extends BaseConditionRenderer<Inf
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public static void write(List<AlertPolicy> policies, List<InfraMetricAlertCondition> conditions, OutputFileWriter writer) throws IOException
+    public static void write(List<AlertPolicy> policies, List<InfraProcessRunningAlertCondition> conditions, OutputFileWriter writer) throws IOException
     {
-        new InfraMetricAlertConditionRenderer().render(policies, conditions, writer);
+        new InfraProcessRunningAlertConditionRenderer().render(policies, conditions, writer);
     }
 
     /**
@@ -71,24 +71,20 @@ public class InfraMetricAlertConditionRenderer extends BaseConditionRenderer<Inf
      * @param condition The alert condition to be serialized
      * @return The line representing the alert condition
      */
-    protected String[] serialize(FileTemplate template, AlertPolicy policy, InfraMetricAlertCondition condition)
+    protected String[] serialize(FileTemplate template, AlertPolicy policy, InfraProcessRunningAlertCondition condition)
     {
         AlertThreshold critical = condition.getCriticalThreshold();
         if(critical == null)
             throw new IllegalStateException("infra alert condition missing critical threshold: "+condition.getName());
-        AlertThreshold warning = condition.getWarningThreshold();
 
         List<String> line = new ArrayList<String>();
         line.add(policy.getName());
         line.add(condition.getName());
         line.add(template.getType());
-        line.add(condition.getEventType());
-        line.add(condition.getSelectValue());
         line.add(condition.getComparison());
-        line.add(warning != null ? Integer.toString(warning.getValue()) : "");
         line.add(Integer.toString(critical.getValue()));
         line.add(Integer.toString(critical.getDurationMinutes()));
-        line.add(critical.getTimeFunction());
+        line.add(condition.getProcessWhereClause());
         line.add(condition.getWhereClause());
         return line.toArray(new String[]{});
     }

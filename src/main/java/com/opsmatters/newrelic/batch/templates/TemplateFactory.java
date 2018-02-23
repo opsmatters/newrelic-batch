@@ -47,6 +47,8 @@ public class TemplateFactory
     private static final FileTemplate externalServiceAlertConditionTemplate = new ExternalServiceAlertConditionTemplate();
     private static final FileTemplate nrqlAlertConditionTemplate = new NrqlAlertConditionTemplate();
     private static final FileTemplate infraMetricAlertConditionTemplate = new InfraMetricAlertConditionTemplate();
+    private static final FileTemplate infraProcessRunningAlertConditionTemplate = new InfraProcessRunningAlertConditionTemplate();
+    private static final FileTemplate infraHostNotReportingAlertConditionTemplate = new InfraHostNotReportingAlertConditionTemplate();
 
     static
     {
@@ -79,6 +81,10 @@ public class TemplateFactory
         NrqlAlertConditionRenderer.registerTemplate(nrqlAlertConditionTemplate);
         InfraMetricAlertConditionParser.registerTemplate(infraMetricAlertConditionTemplate);
         InfraMetricAlertConditionRenderer.registerTemplate(infraMetricAlertConditionTemplate);
+        InfraProcessRunningAlertConditionParser.registerTemplate(infraProcessRunningAlertConditionTemplate);
+        InfraProcessRunningAlertConditionRenderer.registerTemplate(infraProcessRunningAlertConditionTemplate);
+        InfraHostNotReportingAlertConditionParser.registerTemplate(infraHostNotReportingAlertConditionTemplate);
+        InfraHostNotReportingAlertConditionRenderer.registerTemplate(infraHostNotReportingAlertConditionTemplate);
     }
 
     /**

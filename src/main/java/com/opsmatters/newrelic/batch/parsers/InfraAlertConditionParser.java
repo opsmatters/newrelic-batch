@@ -36,7 +36,21 @@ public abstract class InfraAlertConditionParser<T extends InfraAlertCondition> e
     /**
      * Returns a threshold for an alert condition.
      * <P>
-     * Returns null if the threshold is null.
+     * Returns null if the value or duration is null.
+     * </P>
+     * @param value The value of the threshold
+     * @param duration The duration of the threshold in minutes
+     * @return The threshold created
+     */
+    protected AlertThreshold getThreshold(Integer value, Integer duration)
+    {
+        return getThreshold(value, duration, null);
+    }
+
+    /**
+     * Returns a threshold for an alert condition.
+     * <P>
+     * Returns null if the value or duration is null.
      * </P>
      * @param value The value of the threshold
      * @param duration The duration of the threshold in minutes
@@ -45,12 +59,29 @@ public abstract class InfraAlertConditionParser<T extends InfraAlertCondition> e
      */
     protected AlertThreshold getThreshold(Integer value, Integer duration, String timeFunction)
     {
-        if(value == null)
+        if(value == null || duration == null)
             return null;
         return AlertThreshold.builder()
             .value(value)
             .durationMinutes(duration)
             .timeFunction(timeFunction)
+            .build();
+    }
+
+    /**
+     * Returns a threshold for an alert condition.
+     * <P>
+     * Returns null if the duration is null.
+     * </P>
+     * @param duration The duration of the threshold in minutes
+     * @return The threshold created
+     */
+    protected AlertThreshold getThreshold(Integer duration)
+    {
+        if(duration == null)
+            return null;
+        return AlertThreshold.builder()
+            .durationMinutes(duration)
             .build();
     }
 }
