@@ -32,6 +32,8 @@ import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.WebhookChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
 
 /**
  * Represents a set of alert policies, conditions and channels.
@@ -44,7 +46,9 @@ public class AlertConfiguration
 
     private List<AlertPolicy> policies = new ArrayList<AlertPolicy>();
     private List<AlertChannel> channels = new ArrayList<AlertChannel>();
-    private List<AlertCondition> conditions = new ArrayList<AlertCondition>();
+    private List<AlertCondition> alertConditions = new ArrayList<AlertCondition>();
+    private List<ExternalServiceAlertCondition> externalServiceConditions = new ArrayList<ExternalServiceAlertCondition>();
+    private List<NrqlAlertCondition> nrqlConditions = new ArrayList<NrqlAlertCondition>();
 
     /**
      * Default constructor.
@@ -278,31 +282,31 @@ public class AlertConfiguration
     }
 
     /**
-     * Replaces the alert conditions with the given set of conditions.
-     * @param conditions The set of conditions
+     * Replaces the alert conditions with the given set of alert conditions.
+     * @param alertConditions The set of alert conditions
      */
-    public void setAlertConditions(List<AlertCondition> conditions)
+    public void setAlertConditions(List<AlertCondition> alertConditions)
     {
-        this.conditions.clear();
-        this.conditions.addAll(conditions);
+        this.alertConditions.clear();
+        this.alertConditions.addAll(alertConditions);
     }
 
     /**
-     * Adds the given alert conditions to the current set of conditions.
-     * @param conditions The conditions to add
+     * Adds the given alert conditions to the current set of alert conditions.
+     * @param alertConditions The alert conditions to add
      */
-    public void addAlertConditions(List<AlertCondition> conditions)
+    public void addAlertConditions(List<AlertCondition> alertConditions)
     {
-        this.conditions.addAll(conditions);
+        this.alertConditions.addAll(alertConditions);
     }
 
     /**
      * Returns the set of alert conditions.
-     * @return The set of conditions
+     * @return The set of alert conditions
      */
     public List<AlertCondition> getAlertConditions()
     {
-        return conditions;
+        return alertConditions;
     }
 
     /**
@@ -311,7 +315,81 @@ public class AlertConfiguration
      */
     public int numAlertConditions()
     {
-        return conditions.size();
+        return alertConditions.size();
+    }
+
+    /**
+     * Replaces the external service alert conditions with the given set of alert conditions.
+     * @param externalServiceConditions The set of external service alert conditions
+     */
+    public void setExternalServiceAlertConditions(List<ExternalServiceAlertCondition> externalServiceConditions)
+    {
+        this.externalServiceConditions.clear();
+        this.externalServiceConditions.addAll(externalServiceConditions);
+    }
+
+    /**
+     * Adds the given external service alert conditions to the current set of conditions.
+     * @param externalServiceConditions The external service alert conditions to add
+     */
+    public void addExternalServiceAlertConditions(List<ExternalServiceAlertCondition> externalServiceConditions)
+    {
+        this.externalServiceConditions.addAll(externalServiceConditions);
+    }
+
+    /**
+     * Returns the set of external service alert conditions.
+     * @return The set of external service alert conditions
+     */
+    public List<ExternalServiceAlertCondition> getExternalServiceAlertConditions()
+    {
+        return externalServiceConditions;
+    }
+
+    /**
+     * Returns the number of external service alert conditions.
+     * @return The number of external service alert conditions
+     */
+    public int numExternalServiceAlertConditions()
+    {
+        return externalServiceConditions.size();
+    }
+
+    /**
+     * Replaces the NRQL alert conditions with the given set of alert conditions.
+     * @param nrqlConditions The set of NRQL alert conditions
+     */
+    public void setNrqlAlertConditions(List<NrqlAlertCondition> nrqlConditions)
+    {
+        this.nrqlConditions.clear();
+        this.nrqlConditions.addAll(nrqlConditions);
+    }
+
+    /**
+     * Adds the given NRQL alert conditions to the current set of conditions.
+     * @param nrqlConditions The NRQL alert conditions to add
+     */
+    public void addNrqlAlertConditions(List<NrqlAlertCondition> nrqlConditions)
+    {
+        this.nrqlConditions.addAll(nrqlConditions);
+    }
+
+    /**
+     * Returns the set of NRQL alert conditions.
+     * @return The set of NRQL alert conditions
+     */
+    public List<NrqlAlertCondition> getNrqlAlertConditions()
+    {
+        return nrqlConditions;
+    }
+
+    /**
+     * Returns the number of NRQL alert conditions.
+     * @return The number of NRQL alert conditions
+     */
+    public int numNrqlAlertConditions()
+    {
+        return nrqlConditions.size();
     }
 
     /**
@@ -322,7 +400,9 @@ public class AlertConfiguration
     {
         return "AlertConfiguration [policies="+policies.size()
             +", channels="+channels.size()
-            +", conditions="+conditions.size()
+            +", alertConditions="+alertConditions.size()
+            +", externalServiceConditions="+externalServiceConditions.size()
+            +", nrqlConditions="+nrqlConditions.size()
             +"]";
     }
 }

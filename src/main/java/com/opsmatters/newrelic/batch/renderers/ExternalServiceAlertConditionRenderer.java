@@ -22,24 +22,24 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
- * Renderer that converts alert conditions to a text file.
+ * Renderer that converts external service alert conditions to a text file.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition>
+public class ExternalServiceAlertConditionRenderer extends BaseConditionRenderer<ExternalServiceAlertCondition>
 {
-    private static final Logger logger = Logger.getLogger(AlertConditionRenderer.class.getName());
+    private static final Logger logger = Logger.getLogger(ExternalServiceAlertConditionRenderer.class.getName());
 
     /**
      * Private constructor.
      */
-    private AlertConditionRenderer()
+    private ExternalServiceAlertConditionRenderer()
     {
     }
 
@@ -49,7 +49,7 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      */
     public static void registerTemplate(FileTemplate template)
     {
-        TemplateFactory.registerTemplate(AlertConditionRenderer.class, template);
+        TemplateFactory.registerTemplate(ExternalServiceAlertConditionRenderer.class, template);
     }
 
     /**
@@ -59,9 +59,9 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public static void write(List<AlertPolicy> policies, List<AlertCondition> conditions, OutputFileWriter writer) throws IOException
+    public static void write(List<AlertPolicy> policies, List<ExternalServiceAlertCondition> conditions, OutputFileWriter writer) throws IOException
     {
-        new AlertConditionRenderer().render(policies, conditions, writer);
+        new ExternalServiceAlertConditionRenderer().render(policies, conditions, writer);
     }
 
     /**
@@ -71,7 +71,7 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      * @param condition The alert condition to be serialized
      * @return The line representing the alert condition
      */
-    protected String[] serialize(FileTemplate template, AlertPolicy policy, AlertCondition condition)
+    protected String[] serialize(FileTemplate template, AlertPolicy policy, ExternalServiceAlertCondition condition)
     {
         List<Term> terms = condition.getTerms();
         if(terms.size() == 0)
@@ -85,14 +85,13 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
         line.add(condition.getName());
         line.add(template.getType());
         line.add(condition.getType());
-        line.add(condition.getConditionScope());
         line.add(condition.getMetric());
         line.add(critical.getOperator());
         line.add(warning != null ? warning.getThreshold() : "");
         line.add(critical.getThreshold());
         line.add(critical.getDuration());
         line.add(critical.getTimeFunction());
-        line.add(Integer.toString(condition.getViolationCloseTimer()));
+        line.add(condition.getExternalServiceUrl());
         line.add(fromIdList(condition.getEntities()));
         return line.toArray(new String[]{});
     }

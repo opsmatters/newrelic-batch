@@ -22,24 +22,24 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
 /**
- * Renderer that converts alert conditions to a text file.
+ * Renderer that converts NRQL alert conditions to a text file.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition>
+public class NrqlAlertConditionRenderer extends BaseConditionRenderer<NrqlAlertCondition>
 {
-    private static final Logger logger = Logger.getLogger(AlertConditionRenderer.class.getName());
+    private static final Logger logger = Logger.getLogger(NrqlAlertConditionRenderer.class.getName());
 
     /**
      * Private constructor.
      */
-    private AlertConditionRenderer()
+    private NrqlAlertConditionRenderer()
     {
     }
 
@@ -49,7 +49,7 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      */
     public static void registerTemplate(FileTemplate template)
     {
-        TemplateFactory.registerTemplate(AlertConditionRenderer.class, template);
+        TemplateFactory.registerTemplate(NrqlAlertConditionRenderer.class, template);
     }
 
     /**
@@ -59,9 +59,9 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public static void write(List<AlertPolicy> policies, List<AlertCondition> conditions, OutputFileWriter writer) throws IOException
+    public static void write(List<AlertPolicy> policies, List<NrqlAlertCondition> conditions, OutputFileWriter writer) throws IOException
     {
-        new AlertConditionRenderer().render(policies, conditions, writer);
+        new NrqlAlertConditionRenderer().render(policies, conditions, writer);
     }
 
     /**
@@ -71,7 +71,7 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      * @param condition The alert condition to be serialized
      * @return The line representing the alert condition
      */
-    protected String[] serialize(FileTemplate template, AlertPolicy policy, AlertCondition condition)
+    protected String[] serialize(FileTemplate template, AlertPolicy policy, NrqlAlertCondition condition)
     {
         List<Term> terms = condition.getTerms();
         if(terms.size() == 0)
@@ -84,16 +84,14 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
         line.add(policy.getName());
         line.add(condition.getName());
         line.add(template.getType());
-        line.add(condition.getType());
-        line.add(condition.getConditionScope());
-        line.add(condition.getMetric());
+        line.add(condition.getNrql().getQuery());
+        line.add(condition.getValueFunction());
+        line.add(condition.getNrql().getSinceValue());
         line.add(critical.getOperator());
         line.add(warning != null ? warning.getThreshold() : "");
         line.add(critical.getThreshold());
         line.add(critical.getDuration());
         line.add(critical.getTimeFunction());
-        line.add(Integer.toString(condition.getViolationCloseTimer()));
-        line.add(fromIdList(condition.getEntities()));
         return line.toArray(new String[]{});
     }
 }

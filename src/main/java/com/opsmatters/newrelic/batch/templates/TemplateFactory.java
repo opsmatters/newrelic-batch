@@ -44,6 +44,8 @@ public class TemplateFactory
     private static final FileTemplate victoropsChannelTemplate = new VictorOpsChannelTemplate();
     private static final FileTemplate xmattersChannelTemplate = new xMattersChannelTemplate();
     private static final FileTemplate alertConditionTemplate = new AlertConditionTemplate();
+    private static final FileTemplate externalServiceAlertConditionTemplate = new ExternalServiceAlertConditionTemplate();
+    private static final FileTemplate nrqlAlertConditionTemplate = new NrqlAlertConditionTemplate();
 
     static
     {
@@ -70,6 +72,10 @@ public class TemplateFactory
         xMattersChannelRenderer.registerTemplate(xmattersChannelTemplate);
         AlertConditionParser.registerTemplate(alertConditionTemplate);
         AlertConditionRenderer.registerTemplate(alertConditionTemplate);
+        ExternalServiceAlertConditionParser.registerTemplate(externalServiceAlertConditionTemplate);
+        ExternalServiceAlertConditionRenderer.registerTemplate(externalServiceAlertConditionTemplate);
+        NrqlAlertConditionParser.registerTemplate(nrqlAlertConditionTemplate);
+        NrqlAlertConditionRenderer.registerTemplate(nrqlAlertConditionTemplate);
     }
 
     /**

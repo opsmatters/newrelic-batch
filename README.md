@@ -164,7 +164,7 @@ mvn clean test
 The following tests are included:
 
 * NewRelicDashboardTest: Reads the definition of several dashboards containing multiple widgets from a YAML file and creates the dashboards in New Relic. Then exports the same dashboards to a different YAML file.
-* NewRelicAlertTest: Reads the several alert channels and policies from a spreadsheet file and creates them in New Relic. Then exports the same channels and policies to a different spreadsheet file.
+* NewRelicAlertTest: Reads the several alert channels, policies and conditions from a spreadsheet file and creates them in New Relic. Then exports the same channels, policies and conditions to a different spreadsheet file.
 
 ## Deployment
 
@@ -175,7 +175,7 @@ Add the following dependency to include the artefact within your project:
 <dependency>
   <groupId>com.opsmatters</groupId>
   <artifactId>newrelic-batch</artifactId>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
 </dependency>
 ```
 

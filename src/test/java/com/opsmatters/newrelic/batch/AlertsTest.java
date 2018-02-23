@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 import org.junit.Test;
 import junit.framework.Assert;
@@ -39,7 +40,9 @@ import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
-import com.opsmatters.newrelic.api.model.applications.Application;
+import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
+import com.opsmatters.newrelic.api.model.Entity;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
 import com.opsmatters.newrelic.batch.parsers.SlackChannelParser;
@@ -50,6 +53,8 @@ import com.opsmatters.newrelic.batch.parsers.PagerDutyChannelParser;
 import com.opsmatters.newrelic.batch.parsers.VictorOpsChannelParser;
 import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.ExternalServiceAlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.NrqlAlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
@@ -60,6 +65,8 @@ import com.opsmatters.newrelic.batch.renderers.PagerDutyChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.VictorOpsChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.ExternalServiceAlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.NrqlAlertConditionRenderer;
 import com.opsmatters.newrelic.batch.model.AlertConfiguration;
 import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.core.documents.OutputFileWriter;
@@ -91,6 +98,8 @@ public class AlertsTest
     private static final String VICTOROPS_CHANNEL_TAB = "victorops channels";
     private static final String XMATTERS_CHANNEL_TAB = "xmatters channels";
     private static final String ALERT_CONDITION_TAB = "alert conditions";
+    private static final String EXTERNAL_SERVICE_CONDITION_TAB = "external service conditions";
+    private static final String NRQL_CONDITION_TAB = "nrql conditions";
 
     @Test
     public void testNewRelicAlerts()
@@ -136,19 +145,32 @@ public class AlertsTest
         List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(createdPolicies.size() == policies.size());
 
-        // Get the lists of policies and applications
+        // Get the lists of policies and entities
         List<AlertPolicy> allPolicies = manager.getAlertPolicies();
-        List<Application> allApplications = manager.getApplications();
+        List<Entity> entities = new ArrayList<Entity>();
+        entities.addAll(manager.getApplications());
+        entities.addAll(manager.getServers());
 
         // Read the alert conditions
-        readAlertConditions(allPolicies, allApplications, config);
+        readAlertConditions(allPolicies, entities, config);
+        readExternalServiceAlertConditions(allPolicies, entities, config);
+        readNrqlAlertConditions(allPolicies, config);
 
+        // Get the alert conditions
         List<AlertCondition> conditions = config.getAlertConditions();
         Assert.assertTrue(config.numAlertConditions() > 0);
+        List<ExternalServiceAlertCondition> externalServiceConditions = config.getExternalServiceAlertConditions();
+        Assert.assertTrue(config.numExternalServiceAlertConditions() > 0);
+        List<NrqlAlertCondition> nrqlConditions = config.getNrqlAlertConditions();
+        Assert.assertTrue(config.numNrqlAlertConditions() > 0);
 
-        // Create the new alert configuration
+        // Create the new alert conditions
         List<AlertCondition> createdConditions = manager.createAlertConditions(config.getAlertConditions());
         Assert.assertTrue(createdConditions.size() == conditions.size());
+        List<ExternalServiceAlertCondition> createdExternalServiceConditions = manager.createExternalServiceAlertConditions(config.getExternalServiceAlertConditions());
+        Assert.assertTrue(createdExternalServiceConditions.size() == externalServiceConditions.size());
+        List<NrqlAlertCondition> createdNrqlConditions = manager.createNrqlAlertConditions(config.getNrqlAlertConditions());
+        Assert.assertTrue(createdNrqlConditions.size() == nrqlConditions.size());
 
         // Write the alert configuration
         writeEmailChannels(config);
@@ -160,7 +182,9 @@ public class AlertsTest
         writeVictorOpsChannels(config);
         //writexMattersChannels(config);
         writeAlertPolicies(config);
-        writeAlertConditions(createdPolicies, config);
+        writeAlertConditions(allPolicies, config);
+        writeExternalServiceAlertConditions(allPolicies, config);
+        writeNrqlAlertConditions(allPolicies, config);
 
         logger.info("Completed test: "+testName);
     }
@@ -213,7 +237,7 @@ public class AlertsTest
     {
         List<EmailChannel> channels = config.getEmailChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing email alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+EMAIL_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -295,7 +319,7 @@ public class AlertsTest
     {
         List<SlackChannel> channels = config.getSlackChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing Slack alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+SLACK_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -379,7 +403,7 @@ public class AlertsTest
     {
         List<HipChatChannel> channels = config.getHipChatChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing HipChat alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+HIPCHAT_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -463,7 +487,7 @@ public class AlertsTest
     {
         List<CampfireChannel> channels = config.getCampfireChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing Campfire alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+CAMPFIRE_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -547,7 +571,7 @@ public class AlertsTest
     {
         List<OpsGenieChannel> channels = config.getOpsGenieChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing OpsGenie alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+OPSGENIE_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -631,7 +655,7 @@ public class AlertsTest
     {
         List<PagerDutyChannel> channels = config.getPagerDutyChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing PagerDuty alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+PAGERDUTY_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -715,7 +739,7 @@ public class AlertsTest
     {
         List<VictorOpsChannel> channels = config.getVictorOpsChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing VictorOps alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+VICTOROPS_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -799,7 +823,7 @@ public class AlertsTest
     {
         List<xMattersChannel> channels = config.getxMattersChannels();
 
-        // Write the new channels to a new filename
+        // Write the new channels to a new tab
         logger.info("Writing xMatters alert channel file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+XMATTERS_CHANNEL_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -883,7 +907,7 @@ public class AlertsTest
     {
         List<AlertPolicy> policies = config.getAlertPolicies();
 
-        // Write the new policies to a new filename
+        // Write the new policies to a new tab
         logger.info("Writing alert policy file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+ALERT_POLICY_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -924,7 +948,7 @@ public class AlertsTest
         }
     }
 
-    public void readAlertConditions(List<AlertPolicy> policies, List<Application> applications, AlertConfiguration config)
+    public void readAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
     {
         // Read the alert condition file
         logger.info("Loading alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
@@ -938,7 +962,7 @@ public class AlertsTest
                 .withInputStream(is)
                 .build();
 
-            List<AlertCondition> conditions = AlertConditionParser.parse(policies, applications, reader);
+            List<AlertCondition> conditions = AlertConditionParser.parse(policies, entities, reader);
             logger.info("Read "+conditions.size()+" alert conditions");
             config.setAlertConditions(conditions);
         }
@@ -967,7 +991,7 @@ public class AlertsTest
     {
         List<AlertCondition> conditions = config.getAlertConditions();
 
-        // Write the new conditions to a new filename
+        // Write the new conditions to a new tab
         logger.info("Writing alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
         OutputStream os = null;
         OutputFileWriter writer = null;
@@ -988,6 +1012,174 @@ public class AlertsTest
         catch(IOException e)
         {
             logger.severe("Unable to write alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
+    {
+        // Read the alert condition file
+        logger.info("Loading external service alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+EXTERNAL_SERVICE_CONDITION_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(EXTERNAL_SERVICE_CONDITION_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<ExternalServiceAlertCondition> conditions = ExternalServiceAlertConditionParser.parse(policies, entities, reader);
+            logger.info("Read "+conditions.size()+" external service alert conditions");
+            config.setExternalServiceAlertConditions(conditions);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find external service alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeExternalServiceAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        List<ExternalServiceAlertCondition> conditions = config.getExternalServiceAlertConditions();
+
+        // Write the new conditions to a new tab
+        logger.info("Writing external service alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+EXTERNAL_SERVICE_CONDITION_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(EXTERNAL_SERVICE_CONDITION_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            ExternalServiceAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" external service alert conditions");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write external service alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(os != null)
+                    os.close();
+                if(writer != null)
+                    writer.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void readNrqlAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        // Read the alert condition file
+        logger.info("Loading nrql alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+NRQL_CONDITION_TAB);
+        InputStream is = null;
+        try
+        {
+            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
+            InputFileReader reader = InputFileReader.builder()
+                .name(INPUT_FILENAME)
+                .worksheet(NRQL_CONDITION_TAB)
+                .withInputStream(is)
+                .build();
+
+            List<NrqlAlertCondition> conditions = NrqlAlertConditionParser.parse(policies, reader);
+            logger.info("Read "+conditions.size()+" nrql alert conditions");
+            config.setNrqlAlertConditions(conditions);
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.severe("Unable to find nrql alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if(is != null)
+                    is.close();
+            }
+            catch(IOException e)
+            {
+            }
+        }
+    }
+
+    public void writeNrqlAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    {
+        List<NrqlAlertCondition> conditions = config.getNrqlAlertConditions();
+
+        // Write the new conditions to a new tab
+        logger.info("Writing nrql alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+NRQL_CONDITION_TAB);
+        OutputStream os = null;
+        OutputFileWriter writer = null;
+        try
+        {
+            Workbook workbook = getOutputWorkbook();
+            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
+            writer = OutputFileWriter.builder()
+                .name(OUTPUT_FILENAME)
+                .worksheet(NRQL_CONDITION_TAB)
+                .withOutputStream(os)
+                .withWorkbook(workbook)
+                .build();
+
+            NrqlAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" nrql alert conditions");
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write nrql alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
         catch(Exception e)
         {
