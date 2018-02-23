@@ -18,11 +18,9 @@ package com.opsmatters.newrelic.batch.parsers;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyList;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ApmAppAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ApmKeyTransactionAlertCondition;
@@ -32,7 +30,6 @@ import com.opsmatters.newrelic.api.model.alerts.conditions.BrowserAlertCondition
 import com.opsmatters.newrelic.api.model.alerts.conditions.MobileAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
 import com.opsmatters.newrelic.api.model.Entity;
-import com.opsmatters.newrelic.api.model.EntityList;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 import com.opsmatters.newrelic.batch.templates.FileInstance;
@@ -87,43 +84,6 @@ public class AlertConditionParser extends MetricConditionParser<AlertCondition>
     {
         reader.parse();
         return parse(policies, entities, reader.getHeaders(), reader.getRows());
-    }
-
-    /**
-     * Creates the alert conditions from the given lines.
-     * @param policies The set of alert policies for the conditions
-     * @param entities The set of entities for the conditions
-     * @param headers The headers of the file
-     * @param lines The input file lines
-     * @return The alert conditions created from the lines
-     */
-    protected List<AlertCondition> get(List<AlertPolicy> policies, List<Entity> entities, String[] headers, List<String[]> lines)
-    {
-        List<AlertCondition> ret = new ArrayList<AlertCondition>();
-        FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
-        AlertPolicyList policyList = new AlertPolicyList(policies);
-        EntityList entityList = new EntityList(entities);
-        logger.info("Processing "+file.getType()+" file: policies="+policies.size()
-            +" entities="+entities.size()+" headers="+headers.length+" lines="+lines.size());
-
-        file.checkColumns();
-        for(String[] line : lines)
-        {
-            // Check that the line matches the file type
-            if(!file.matches(line))
-            {
-                logger.severe("found illegal line in "+file.getType()+" file: "+file.getType(line));
-                continue;
-            }
-
-            AlertCondition condition = create(file, line);
-            setPolicyId(condition, policyList, file.getString(AlertCondition.POLICY_NAME, line));
-            setEntities(condition, file.getString(AlertCondition.FILTER, line), 
-                file.getString(AlertCondition.ENTITIES, line), entityList);
-            ret.add(condition);
-        }
-
-        return ret;
     }
 
     /**

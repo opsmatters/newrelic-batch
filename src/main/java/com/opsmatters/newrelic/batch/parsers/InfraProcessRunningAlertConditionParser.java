@@ -18,11 +18,9 @@ package com.opsmatters.newrelic.batch.parsers;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyList;
 import com.opsmatters.newrelic.api.model.alerts.conditions.InfraProcessRunningAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertThreshold;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
@@ -77,39 +75,6 @@ public class InfraProcessRunningAlertConditionParser extends InfraAlertCondition
     {
         reader.parse();
         return parse(policies, reader.getHeaders(), reader.getRows());
-    }
-
-    /**
-     * Creates the alert conditions from the given lines.
-     * @param policies The set of alert policies for the conditions
-     * @param headers The headers of the file
-     * @param lines The input file lines
-     * @return The alert conditions created from the lines
-     */
-    protected List<InfraProcessRunningAlertCondition> get(List<AlertPolicy> policies, String[] headers, List<String[]> lines)
-    {
-        List<InfraProcessRunningAlertCondition> ret = new ArrayList<InfraProcessRunningAlertCondition>();
-        FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
-        AlertPolicyList policyList = new AlertPolicyList(policies);
-        logger.info("Processing "+file.getType()+" file: policies="+policies.size()
-            +" headers="+headers.length+" lines="+lines.size());
-
-        file.checkColumns();
-        for(String[] line : lines)
-        {
-            // Check that the line matches the file type
-            if(!file.matches(line))
-            {
-                logger.severe("found illegal line in "+file.getType()+" file: "+file.getType(line));
-                continue;
-            }
-
-            InfraProcessRunningAlertCondition condition = create(file, line);
-            setPolicyId(condition, policyList, file.getString(InfraProcessRunningAlertCondition.POLICY_NAME, line));
-            ret.add(condition);
-        }
-
-        return ret;
     }
 
     /**

@@ -18,17 +18,14 @@ package com.opsmatters.newrelic.batch.parsers;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
-import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyList;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ApmExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.MobileExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
 import com.opsmatters.newrelic.api.model.Entity;
-import com.opsmatters.newrelic.api.model.EntityList;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 import com.opsmatters.newrelic.batch.templates.FileInstance;
@@ -93,35 +90,6 @@ public class ExternalServiceAlertConditionParser extends MetricConditionParser<E
      * @param lines The input file lines
      * @return The alert conditions created from the lines
      */
-    protected List<ExternalServiceAlertCondition> get(List<AlertPolicy> policies, List<Entity> entities, String[] headers, List<String[]> lines)
-    {
-        List<ExternalServiceAlertCondition> ret = new ArrayList<ExternalServiceAlertCondition>();
-        FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
-        AlertPolicyList policyList = new AlertPolicyList(policies);
-        EntityList entityList = new EntityList(entities);
-        logger.info("Processing "+file.getType()+" file: policies="+policies.size()
-            +" entities="+entities.size()+" headers="+headers.length+" lines="+lines.size());
-
-        file.checkColumns();
-        for(String[] line : lines)
-        {
-            // Check that the line matches the file type
-            if(!file.matches(line))
-            {
-                logger.severe("found illegal line in "+file.getType()+" file: "+file.getType(line));
-                continue;
-            }
-
-            ExternalServiceAlertCondition condition = create(file, line);
-            setPolicyId(condition, policyList, file.getString(ExternalServiceAlertCondition.POLICY_NAME, line));
-            setEntities(condition, file.getString(ExternalServiceAlertCondition.FILTER, line), 
-                file.getString(ExternalServiceAlertCondition.ENTITIES, line), entityList);
-            ret.add(condition);
-        }
-
-        return ret;
-    }
-
     /**
      * Reads the alert condition from the given line.
      * @param file The file instance with the columns
