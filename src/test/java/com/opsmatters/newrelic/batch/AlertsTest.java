@@ -211,8 +211,8 @@ public class AlertsTest
         writeVictorOpsChannels(config);
         //writexMattersChannels(config);
         writeAlertPolicies(allChannels, config);
-        writeAlertConditions(allPolicies, config);
-        writeExternalServiceAlertConditions(allPolicies, config);
+        writeAlertConditions(allPolicies, entities, config);
+        writeExternalServiceAlertConditions(allPolicies, entities, config);
         writeNrqlAlertConditions(allPolicies, config);
         writeInfraMetricAlertConditions(allPolicies, config);
         writeInfraProcessAlertConditions(allPolicies, config);
@@ -1019,7 +1019,7 @@ public class AlertsTest
         }
     }
 
-    public void writeAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    public void writeAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
     {
         List<AlertCondition> conditions = config.getAlertConditions();
 
@@ -1038,7 +1038,7 @@ public class AlertsTest
                 .withWorkbook(workbook)
                 .build();
 
-            AlertConditionRenderer.write(policies, conditions, writer);
+            AlertConditionRenderer.write(policies, conditions, entities, writer);
             logger.info("Wrote "+conditions.size()+" alert conditions");
         }
         catch(IOException e)
@@ -1103,7 +1103,7 @@ public class AlertsTest
         }
     }
 
-    public void writeExternalServiceAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
+    public void writeExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
     {
         List<ExternalServiceAlertCondition> conditions = config.getExternalServiceAlertConditions();
 
@@ -1122,7 +1122,7 @@ public class AlertsTest
                 .withWorkbook(workbook)
                 .build();
 
-            ExternalServiceAlertConditionRenderer.write(policies, conditions, writer);
+            ExternalServiceAlertConditionRenderer.write(policies, conditions, entities, writer);
             logger.info("Wrote "+conditions.size()+" external service alert conditions");
         }
         catch(IOException e)

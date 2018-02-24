@@ -68,24 +68,7 @@ public abstract class OutputFileRenderer<T>
     }
 
     /**
-     * Converts the given list of ids to a comma-separated string.
-     * @param ids The list of ids to be serialized
-     * @return The comma-separated string representing the ids
-     */
-    protected String fromIdList(List<Long> ids)
-    {
-        StringBuilder sb = new StringBuilder();
-        for(Long id : ids)
-        {
-            if(sb.length() > 0)
-                sb.append(",");
-            sb.append(id);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Converts the given list of items to a comma-separated string.
+     * Converts the given list of items to a comma-separated list of names.
      * @param items The list of items to be serialized
      * @return The comma-separated string representing the names of the items
      */

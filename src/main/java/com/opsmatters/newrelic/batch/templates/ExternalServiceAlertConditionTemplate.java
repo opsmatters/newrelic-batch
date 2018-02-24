@@ -75,12 +75,6 @@ public class ExternalServiceAlertConditionTemplate extends FileTemplate
         .name(ExternalServiceAlertCondition.EXTERNAL_SERVICE_URL)
         .header("External Service URL")
         .build();
-    public TemplateColumn FILTER = TemplateColumn.builder()
-        .name(ExternalServiceAlertCondition.FILTER)
-        .header("Filter")
-        .mandatory(false)
-        .output(false)
-        .build();
     public TemplateColumn ENTITIES = TemplateColumn.builder()
         .name(ExternalServiceAlertCondition.ENTITIES)
         .header("Entities")
@@ -103,7 +97,6 @@ public class ExternalServiceAlertConditionTemplate extends FileTemplate
         addColumn(DURATION);
         addColumn(TIME_FUNCTION);
         addColumn(EXTERNAL_SERVICE_URL);
-        addColumn(FILTER);
         addColumn(ENTITIES);
     }
 

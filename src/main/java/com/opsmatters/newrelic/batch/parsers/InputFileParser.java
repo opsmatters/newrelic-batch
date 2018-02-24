@@ -69,35 +69,6 @@ public abstract class InputFileParser<T> extends BaseParser
     protected abstract T create(FileInstance file, String[] line);
 
     /**
-     * Converts the given comma-separated string to a list of ids.
-     * @param str The comma-separated string
-     * @return The list of of ids
-     */
-    protected List<Long> toIdList(String str)
-    {
-        List<Long> ret = new ArrayList<Long>();
-
-        String[] tokens = str.split(",");
-        for(String token : tokens)
-        {
-            token = token.trim();
-            if(token.length() > 0)
-            {
-                try
-                {
-                    ret.add(Long.valueOf(token));
-                }
-                catch(NumberFormatException e)
-                {
-                    return null; // Fail fast on an invalid id
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    /**
      * Converts the given resource list to a list of ids.
      * @param items The resource list
      * @return The list of of ids

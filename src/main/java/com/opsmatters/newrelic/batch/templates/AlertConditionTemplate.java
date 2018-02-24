@@ -81,12 +81,6 @@ public class AlertConditionTemplate extends FileTemplate
         .mandatory(false)
         .defaultValue(Integer.toString(AlertCondition.ViolationCloseTimerInterval.HOURS_24.value()))
         .build();
-    public TemplateColumn FILTER = TemplateColumn.builder()
-        .name(AlertCondition.FILTER)
-        .header("Filter")
-        .mandatory(false)
-        .output(false)
-        .build();
     public TemplateColumn ENTITIES = TemplateColumn.builder()
         .name(AlertCondition.ENTITIES)
         .header("Entities")
@@ -110,7 +104,6 @@ public class AlertConditionTemplate extends FileTemplate
         addColumn(DURATION);
         addColumn(TIME_FUNCTION);
         addColumn(VIOLATION_CLOSE_TIMER);
-        addColumn(FILTER);
         addColumn(ENTITIES);
     }
 

@@ -72,8 +72,7 @@ public abstract class MetricConditionParser<T extends MetricCondition> extends T
 
             T condition = create(file, line);
             setPolicyId(condition, file.getString(MetricCondition.POLICY_NAME, line), policyList);
-            setEntities(condition, file.getString(MetricCondition.FILTER, line), 
-                file.getString(MetricCondition.ENTITIES, line), entityList);
+            setEntities(condition, file.getString(MetricCondition.ENTITIES, line), entityList);
             ret.add(condition);
         }
 
@@ -83,16 +82,13 @@ public abstract class MetricConditionParser<T extends MetricCondition> extends T
     /**
      * Sets the entities of the given condition.
      * @param condition The condition to be set
-     * @param filter A wild-carded expression for the entities for the condition
-     * @param entities A comma-separated list of entity ids for the condition
+     * @param entities A comma-separated list of entity names for the condition
      * @param entityList The list of entities
      * @throws IllegalStateException if the policy is null or the id of the policy is null or empty
      */
-    protected void setEntities(T condition, String filter, String entities, EntityList entityList)
+    protected void setEntities(T condition, String entities, EntityList entityList)
     {
-        if(filter != null)
-            condition.setEntities(toIdList(entityList.list(filter)));
-        else if(entities != null)
-            condition.setEntities(toIdList(entities));
+        if(entities != null)
+            condition.setEntities(toIdList(entityList.list(entities)));
     }
 }

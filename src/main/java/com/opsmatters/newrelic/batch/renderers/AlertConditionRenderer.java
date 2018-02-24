@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.OutputFileWriter;
+import com.opsmatters.newrelic.api.model.Entity;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.Term;
@@ -32,7 +33,7 @@ import com.opsmatters.newrelic.batch.templates.TemplateFactory;
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition>
+public class AlertConditionRenderer extends MetricConditionRenderer<AlertCondition>
 {
     private static final Logger logger = Logger.getLogger(AlertConditionRenderer.class.getName());
 
@@ -56,22 +57,25 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
      * Writes the given alert conditions to a writer.
      * @param policies The set of alert policies for the conditions
      * @param conditions The alert conditions to be serialized
+     * @param entities The set of entities for the condition
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public static void write(List<AlertPolicy> policies, List<AlertCondition> conditions, OutputFileWriter writer) throws IOException
+    public static void write(List<AlertPolicy> policies, List<AlertCondition> conditions, List<Entity> entities, OutputFileWriter writer)
+        throws IOException
     {
-        new AlertConditionRenderer().render(policies, conditions, writer);
+        new AlertConditionRenderer().render(policies, conditions, entities, writer);
     }
 
     /**
      * Serializes the alert condition to a line.
+     * @param entities The set of entities for the condition
      * @param template The template with the columns
      * @param policy The alert policy for the condition
      * @param condition The alert condition to be serialized
      * @return The line representing the alert condition
      */
-    protected String[] serialize(FileTemplate template, AlertPolicy policy, AlertCondition condition)
+    protected String[] serialize(List<Entity> entities, FileTemplate template, AlertPolicy policy, AlertCondition condition)
     {
         List<Term> terms = condition.getTerms();
         if(terms.size() == 0)
@@ -93,7 +97,7 @@ public class AlertConditionRenderer extends BaseConditionRenderer<AlertCondition
         line.add(critical.getDuration());
         line.add(critical.getTimeFunction());
         line.add(Integer.toString(condition.getViolationCloseTimer()));
-        line.add(fromIdList(condition.getEntities()));
+        line.add(fromItemList(entities));
         return line.toArray(new String[]{});
     }
 }
