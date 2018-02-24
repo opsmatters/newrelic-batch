@@ -136,27 +136,36 @@ public class AlertsTest
         List<AlertChannel> channels = config.getAlertChannels();
         Assert.assertTrue(config.numAlertChannels() > 0);
 
-        // Read the alert policies
-        readAlertPolicies(config);
-
-        List<AlertPolicy> policies = config.getAlertPolicies();
-        Assert.assertTrue(config.numAlertPolicies() > 0);
-
         // Delete the existing alert channels
         List<AlertChannel> deletedChannels = manager.deleteAlertChannels(config.getAlertChannels());
         Assert.assertTrue(deletedChannels.size() == channels.size());
-
-        // Delete the existing alert policies
-        List<AlertPolicy> deletedPolicies = manager.deleteAlertPolicies(config.getAlertPolicies());
-        Assert.assertTrue(deletedPolicies.size() == policies.size());
 
         // Create the new alert channels
         List<AlertChannel> createdChannels = manager.createAlertChannels(config.getAlertChannels());
         Assert.assertTrue(createdChannels.size() == channels.size());
 
+        // Get the list of channels
+        List<AlertChannel> allChannels = manager.getAlertChannels();
+
+        // Read the alert policies
+        readAlertPolicies(allChannels, config);
+
+        List<AlertPolicy> policies = config.getAlertPolicies();
+        Assert.assertTrue(config.numAlertPolicies() > 0);
+
+        // Delete the existing alert policies
+        List<AlertPolicy> deletedPolicies = manager.deleteAlertPolicies(config.getAlertPolicies());
+        Assert.assertTrue(deletedPolicies.size() == policies.size());
+
         // Create the new alert policies
         List<AlertPolicy> createdPolicies = manager.createAlertPolicies(config.getAlertPolicies());
         Assert.assertTrue(createdPolicies.size() == policies.size());
+
+        // Get the list of channels again as it will have the updated links after creating the policies
+        allChannels = manager.getAlertChannels();
+
+        // Reset the list of policies so that we only use the (clean) returned objects
+        config.setAlertPolicies(createdPolicies);
 
         // Get the lists of policies and entities
         List<AlertPolicy> allPolicies = manager.getAlertPolicies();
@@ -201,7 +210,7 @@ public class AlertsTest
         writePagerDutyChannels(config);
         writeVictorOpsChannels(config);
         //writexMattersChannels(config);
-        writeAlertPolicies(config);
+        writeAlertPolicies(allChannels, config);
         writeAlertConditions(allPolicies, config);
         writeExternalServiceAlertConditions(allPolicies, config);
         writeNrqlAlertConditions(allPolicies, config);
@@ -887,7 +896,7 @@ public class AlertsTest
         }
     }
 
-    public void readAlertPolicies(AlertConfiguration config)
+    public void readAlertPolicies(List<AlertChannel> channels, AlertConfiguration config)
     {
         // Read the alert policy file
         logger.info("Loading alert policy file: "+INPUT_PATH+INPUT_FILENAME+"/"+ALERT_POLICY_TAB);
@@ -901,7 +910,7 @@ public class AlertsTest
                 .withInputStream(is)
                 .build();
 
-            List<AlertPolicy> policies = AlertPolicyParser.parse(reader);
+            List<AlertPolicy> policies = AlertPolicyParser.parse(channels, reader);
             logger.info("Read "+policies.size()+" alert policies");
             config.setAlertPolicies(policies);
         }
@@ -926,7 +935,7 @@ public class AlertsTest
         }
     }
 
-    public void writeAlertPolicies(AlertConfiguration config)
+    public void writeAlertPolicies(List<AlertChannel> channels, AlertConfiguration config)
     {
         List<AlertPolicy> policies = config.getAlertPolicies();
 
@@ -945,7 +954,7 @@ public class AlertsTest
                 .withWorkbook(workbook)
                 .build();
 
-            AlertPolicyRenderer.write(policies, writer);
+            AlertPolicyRenderer.write(channels, policies, writer);
             logger.info("Wrote "+policies.size()+" alert policies");
         }
         catch(IOException e)

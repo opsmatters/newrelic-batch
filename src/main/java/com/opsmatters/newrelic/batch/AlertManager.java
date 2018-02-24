@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.NewRelicInfraApi;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.BaseCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
@@ -146,9 +147,21 @@ public class AlertManager
         logger.info("Creating "+policies.size()+" alert policies");
         for(AlertPolicy policy : policies)
         {
+            AlertPolicyChannel channels = policy.getChannels();
             logger.info("Creating alert policy: "+policy.getName());
             policy = apiClient.alertPolicies().create(policy).get();
             logger.info("Created alert policy: "+policy.getId()+" - "+policy.getName());
+
+            // Add the channels for the policy
+            if(channels != null)
+            {
+                for(Long channelId : channels.getChannelIds())
+                {
+                    if(channelId != null)
+                        apiClient.alertPolicyChannels().update(policy.getId(), channelId);
+                }
+            }
+
             ret.add(policy);
         }
 
@@ -223,6 +236,24 @@ public class AlertManager
             apiClient.alertPolicies().delete(policy.getId());
             logger.info("Deleted alert policy : "+policy.getId()+" - "+policy.getName());
         }
+    }
+
+    /**
+     * Returns the alert channels.
+     * @return The alert channels
+     */
+    public List<AlertChannel> getAlertChannels()
+    {
+        checkInitialize();
+
+        // Get the alert channels
+        logger.info("Getting the alert channels");
+        Collection<AlertChannel> channels = apiClient.alertChannels().list();
+        logger.info("Got "+channels.size()+" alert channels");
+
+        List<AlertChannel> ret = new ArrayList<AlertChannel>();
+        ret.addAll(channels);
+        return ret;
     }
 
     /**

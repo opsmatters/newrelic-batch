@@ -67,7 +67,7 @@ public abstract class BaseConditionParser<T extends BaseCondition> extends Input
             }
 
             T condition = create(file, line);
-            setPolicyId(condition, policyList, file.getString(BaseCondition.POLICY_NAME, line));
+            setPolicyId(condition, file.getString(BaseCondition.POLICY_NAME, line), policyList);
             ret.add(condition);
         }
 
@@ -77,11 +77,11 @@ public abstract class BaseConditionParser<T extends BaseCondition> extends Input
     /**
      * Sets the policy id of the given condition.
      * @param condition The condition to be set
-     * @param policyList The list of alert policies
      * @param policyName The name of the alert policy for the condition
+     * @param policyList The list of alert policies
      * @throws IllegalStateException if the policy is null or the id of the policy is null or empty
      */
-    protected void setPolicyId(T condition, AlertPolicyList policyList, String policyName)
+    protected void setPolicyId(T condition, String policyName, AlertPolicyList policyList)
     {
         AlertPolicy policy = policyList.get(policyName);
         if(policy == null)

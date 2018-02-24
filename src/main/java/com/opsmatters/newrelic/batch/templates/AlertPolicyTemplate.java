@@ -17,6 +17,7 @@
 package com.opsmatters.newrelic.batch.templates;
 
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyChannel;
 import com.opsmatters.newrelic.api.model.alerts.IncidentPreference;
 
 /**
@@ -42,6 +43,11 @@ public class AlertPolicyTemplate extends FileTemplate
         .mandatory(false)
         .defaultValue(IncidentPreference.PER_POLICY.name())
         .build();
+    public TemplateColumn CHANNELS = TemplateColumn.builder()
+        .name(AlertPolicyChannel.CHANNELS)
+        .header("Channels")
+        .mandatory(false)
+        .build();
 
     /**
      * Default constructor.
@@ -51,6 +57,7 @@ public class AlertPolicyTemplate extends FileTemplate
         addColumn(NAME);
         addColumn(TEMPLATE_TYPE);
         addColumn(INCIDENT_PREFERENCE);
+        addColumn(CHANNELS);
     }
 
     /**

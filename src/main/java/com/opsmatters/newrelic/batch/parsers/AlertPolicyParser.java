@@ -18,9 +18,13 @@ package com.opsmatters.newrelic.batch.parsers;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
+import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannelList;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 import com.opsmatters.newrelic.batch.templates.FileInstance;
@@ -52,25 +56,59 @@ public class AlertPolicyParser extends InputFileParser<AlertPolicy>
 
     /**
      * Reads the alert policies from the given lines.
+     * @param channels The set of alert channels for the policies
      * @param headers The headers of the file
      * @param lines The lines of the file
      * @return The alert policies read from the lines
      */
-    public static List<AlertPolicy> parse(String[] headers, List<String[]> lines)
+    public static List<AlertPolicy> parse(List<AlertChannel> channels, String[] headers, List<String[]> lines)
     {
-        return new AlertPolicyParser().get(headers, lines);
+        return new AlertPolicyParser().get(channels, headers, lines);
     }
 
     /**
      * Reads the alert policies from the given reader.
+     * @param channels The set of alert channels for the policies
      * @param reader The input stream reader used to read the lines
      * @return The alert policies read from the lines
      * @throws IOException if there is a problem reading the input file or it does not exist
      */
-    public static List<AlertPolicy> parse(InputFileReader reader) throws IOException
+    public static List<AlertPolicy> parse(List<AlertChannel> channels, InputFileReader reader) throws IOException
     {
         reader.parse();
-        return parse(reader.getHeaders(), reader.getRows());
+        return parse(channels, reader.getHeaders(), reader.getRows());
+    }
+
+    /**
+     * Creates the alert policies from the given lines.
+     * @param channels The set of alert channels for the policies
+     * @param headers The headers of the file
+     * @param lines The input file lines
+     * @return The alert policies created from the lines
+     */
+    protected List<AlertPolicy> get(List<AlertChannel> channels, String[] headers, List<String[]> lines)
+    {
+        List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
+        FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
+        AlertChannelList channelList = new AlertChannelList(channels);
+        logger.info("Processing "+file.getType()+" file: headers="+headers.length+" lines="+lines.size());
+
+        file.checkColumns();
+        for(String[] line : lines)
+        {
+            // Check that the line matches the file type
+            if(!file.matches(line))
+            {
+                logger.severe("found illegal line in "+file.getType()+" file: "+file.getType(line));
+                continue;
+            }
+
+            AlertPolicy policy = create(file, line);
+            setChannelIds(policy, file.getString(AlertPolicyChannel.CHANNELS, line), channelList);
+            ret.add(policy);
+        }
+
+        return ret;
     }
 
     /**
@@ -85,5 +123,27 @@ public class AlertPolicyParser extends InputFileParser<AlertPolicy>
             .name(file.getString(AlertPolicy.NAME, line))
             .incidentPreference(file.getString(AlertPolicy.INCIDENT_PREFERENCE, line))
             .build();
+    }
+
+    /**
+     * Sets the channel ids of the given policy.
+     * @param policy The alert policy to be set
+     * @param channelList The list of alert channels
+     * @param channels The comma-separated list of alert channels for the policy
+     */
+    protected void setChannelIds(AlertPolicy policy, String channels, AlertChannelList channelList)
+    {
+        if(channels != null)
+        {
+            List<Long> channelIds = new ArrayList<Long>();
+            String[] channelNames = channels.split(",");
+            for(String channelName : channelNames)
+            {
+                AlertChannel channel = channelList.get(channelName.trim());
+                if(channel != null)
+                    channelIds.add(channel.getId());
+            }
+            policy.setChannelIds(channelIds);
+        }
     }
 }

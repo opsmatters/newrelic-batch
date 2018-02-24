@@ -71,7 +71,7 @@ public abstract class MetricConditionParser<T extends MetricCondition> extends T
             }
 
             T condition = create(file, line);
-            setPolicyId(condition, policyList, file.getString(MetricCondition.POLICY_NAME, line));
+            setPolicyId(condition, file.getString(MetricCondition.POLICY_NAME, line), policyList);
             setEntities(condition, file.getString(MetricCondition.FILTER, line), 
                 file.getString(MetricCondition.ENTITIES, line), entityList);
             ret.add(condition);

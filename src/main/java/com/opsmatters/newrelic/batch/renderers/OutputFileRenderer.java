@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import com.opsmatters.core.documents.OutputFileWriter;
+import com.opsmatters.newrelic.api.model.NamedResource;
 import com.opsmatters.newrelic.batch.templates.FileTemplate;
 import com.opsmatters.newrelic.batch.templates.TemplateFactory;
 
@@ -79,6 +80,23 @@ public abstract class OutputFileRenderer<T>
             if(sb.length() > 0)
                 sb.append(",");
             sb.append(id);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Converts the given list of items to a comma-separated string.
+     * @param items The list of items to be serialized
+     * @return The comma-separated string representing the names of the items
+     */
+    protected String fromItemList(List<? extends NamedResource> items)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(NamedResource item : items)
+        {
+            if(sb.length() > 0)
+                sb.append(",");
+            sb.append(item.getName());
         }
         return sb.toString();
     }
