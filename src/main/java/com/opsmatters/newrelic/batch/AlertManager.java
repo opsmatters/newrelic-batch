@@ -124,10 +124,7 @@ public class AlertManager
         logger.info("Getting the alert policies");
         Collection<AlertPolicy> policies = apiClient.alertPolicies().list();
         logger.info("Got "+policies.size()+" alert policies");
-
-        List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
-        ret.addAll(policies);
-        return ret;
+        return toList(policies);
     }
 
     /**
@@ -146,24 +143,7 @@ public class AlertManager
         List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
         logger.info("Creating "+policies.size()+" alert policies");
         for(AlertPolicy policy : policies)
-        {
-            AlertPolicyChannel channels = policy.getChannels();
-            logger.info("Creating alert policy: "+policy.getName());
-            policy = apiClient.alertPolicies().create(policy).get();
-            logger.info("Created alert policy: "+policy.getId()+" - "+policy.getName());
-
-            // Add the channels for the policy
-            if(channels != null)
-            {
-                for(Long channelId : channels.getChannelIds())
-                {
-                    if(channelId != null)
-                        apiClient.alertPolicyChannels().update(policy.getId(), channelId);
-                }
-            }
-
-            ret.add(policy);
-        }
+            ret.add(createAlertPolicy(policy));
 
         return ret;
     }
@@ -178,9 +158,23 @@ public class AlertManager
         checkInitialize();
 
         // Create the policy
+        AlertPolicyChannel channels = policy.getChannels();
         logger.info("Creating alert policy: "+policy.getName());
         policy = apiClient.alertPolicies().create(policy).get();
         logger.info("Created alert policy: "+policy.getId()+" - "+policy.getName());
+
+        // Add the channels for the policy
+        if(channels != null)
+        {
+            for(Long channelId : channels.getChannelIds())
+            {
+                if(channelId != null)
+                {
+                    apiClient.alertPolicyChannels().update(policy.getId(), channelId);
+                    logger.info("Added channel for alert policy: "+channelId);
+                }
+            }
+        }
 
         return policy;
     }
@@ -250,10 +244,7 @@ public class AlertManager
         logger.info("Getting the alert channels");
         Collection<AlertChannel> channels = apiClient.alertChannels().list();
         logger.info("Got "+channels.size()+" alert channels");
-
-        List<AlertChannel> ret = new ArrayList<AlertChannel>();
-        ret.addAll(channels);
-        return ret;
+        return toList(channels);
     }
 
     /**
@@ -272,12 +263,7 @@ public class AlertManager
         List<AlertChannel> ret = new ArrayList<AlertChannel>();
         logger.info("Creating "+channels.size()+" alert channels");
         for(AlertChannel channel : channels)
-        {
-            logger.info("Creating alert channel: "+channel.getName());
-            channel = apiClient.alertChannels().create(channel).get();
-            logger.info("Created alert channel: "+channel.getId()+" - "+channel.getName());
-            ret.add(channel);
-        }
+            ret.add(createAlertChannel(channel));
 
         return ret;
     }
@@ -379,13 +365,7 @@ public class AlertManager
         List<AlertCondition> ret = new ArrayList<AlertCondition>();
         logger.info("Creating "+conditions.size()+" alert conditions");
         for(AlertCondition condition : conditions)
-        {
-            logger.info("Creating alert condition: "+condition.getName());
-            checkPolicyId(condition);
-            condition = apiClient.alertConditions().create(condition.getPolicyId(), condition).get();
-            logger.info("Created alert condition: "+condition.getId()+" - "+condition.getName());
-            ret.add(condition);
-        }
+            ret.add(createAlertCondition(condition));
 
         return ret;
     }
@@ -480,13 +460,7 @@ public class AlertManager
         List<ExternalServiceAlertCondition> ret = new ArrayList<ExternalServiceAlertCondition>();
         logger.info("Creating "+conditions.size()+" external service alert conditions");
         for(ExternalServiceAlertCondition condition : conditions)
-        {
-            logger.info("Creating external service alert condition: "+condition.getName());
-            checkPolicyId(condition);
-            condition = apiClient.externalServiceAlertConditions().create(condition.getPolicyId(), condition).get();
-            logger.info("Created external service alert condition: "+condition.getId()+" - "+condition.getName());
-            ret.add(condition);
-        }
+            ret.add(createExternalServiceAlertCondition(condition));
 
         return ret;
     }
@@ -581,13 +555,7 @@ public class AlertManager
         List<NrqlAlertCondition> ret = new ArrayList<NrqlAlertCondition>();
         logger.info("Creating "+conditions.size()+" NRQL alert conditions");
         for(NrqlAlertCondition condition : conditions)
-        {
-            logger.info("Creating NRQL alert condition: "+condition.getName());
-            checkPolicyId(condition);
-            condition = apiClient.nrqlAlertConditions().create(condition.getPolicyId(), condition).get();
-            logger.info("Created NRQL alert condition: "+condition.getId()+" - "+condition.getName());
-            ret.add(condition);
-        }
+            ret.add(createNrqlAlertCondition(condition));
 
         return ret;
     }
@@ -682,13 +650,7 @@ public class AlertManager
         List<InfraAlertCondition> ret = new ArrayList<InfraAlertCondition>();
         logger.info("Creating "+conditions.size()+" infra alert conditions");
         for(InfraAlertCondition condition : conditions)
-        {
-            logger.info("Creating infra alert condition: "+condition.getName());
-            checkPolicyId(condition);
-            condition = infraApiClient.infraAlertConditions().create(condition).get();
-            logger.info("Created infra alert condition: "+condition.getId()+" - "+condition.getName());
-            ret.add(condition);
-        }
+            ret.add(createInfraAlertCondition(condition));
 
         return ret;
     }
@@ -779,11 +741,8 @@ public class AlertManager
         logger.info("Getting the applications");
         Collection<Application> applications = apiClient.applications().list();
         logger.info("Got "+applications.size()+" applications");
-
-        List<Application> ret = new ArrayList<Application>();
-        ret.addAll(applications);
-        return ret;
-    }
+        return toList(applications);
+   }
 
     /**
      * Returns the servers.
@@ -797,9 +756,19 @@ public class AlertManager
         logger.info("Getting the servers");
         Collection<Server> servers = apiClient.servers().list();
         logger.info("Got "+servers.size()+" servers");
+        return toList(servers);
+    }
 
-        List<Server> ret = new ArrayList<Server>();
-        ret.addAll(servers);
+    /**
+     * Converts the given collection to a list.
+     * @param <T> The type of the collection
+     * @param collection The collection
+     * @return The list
+     */
+    public <T> List<T> toList(Collection<T> collection)
+    {
+        List<T> ret = new ArrayList<T>();
+        ret.addAll(collection);
         return ret;
     }
 }
