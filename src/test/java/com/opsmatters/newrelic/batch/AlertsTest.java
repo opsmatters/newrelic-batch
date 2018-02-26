@@ -174,8 +174,11 @@ public class AlertsTest
         {
 //GERALD
 //        readAlertConditions(allPolicies, entities, config);
+//        readExternalServiceAlertConditions(allPolicies, entities, config);
             // Read the alert conditions
             config.setAlertConditions(manager.readAlertConditions(allPolicies, entities, INPUT_FILENAME, ALERT_CONDITION_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+            config.setExternalServiceAlertConditions(manager.readExternalServiceAlertConditions(allPolicies, entities, INPUT_FILENAME, EXTERNAL_SERVICE_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
         }
         catch(IOException e)
@@ -184,7 +187,6 @@ public class AlertsTest
         }
 
         // Read the alert conditions
-        readExternalServiceAlertConditions(allPolicies, entities, config);
         readNrqlAlertConditions(allPolicies, config);
         readInfraMetricAlertConditions(allPolicies, config);
         readInfraProcessAlertConditions(allPolicies, config);
@@ -276,10 +278,16 @@ public class AlertsTest
         {
 //GERALD
 //        writeAlertConditions(allPolicies, entities, config);
+//        writeExternalServiceAlertConditions(allPolicies, entities, config);
             // Write the alert conditions
             Workbook workbook = getOutputWorkbook();
             manager.writeAlertConditions(allPolicies, entities, config.getAlertConditions(), 
                 OUTPUT_FILENAME, ALERT_CONDITION_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+
+            workbook = getOutputWorkbook();
+            manager.writeExternalServiceAlertConditions(allPolicies, entities, config.getExternalServiceAlertConditions(), 
+                OUTPUT_FILENAME, EXTERNAL_SERVICE_CONDITION_TAB, 
                 new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
         }
         catch(IOException e)
@@ -287,7 +295,6 @@ public class AlertsTest
             logger.severe("Unable to write alert policy file: "+e.getClass().getName()+": "+e.getMessage());
         }
 
-        writeExternalServiceAlertConditions(allPolicies, entities, config);
         writeNrqlAlertConditions(allPolicies, config);
         writeInfraMetricAlertConditions(allPolicies, config);
         writeInfraProcessAlertConditions(allPolicies, config);
@@ -299,90 +306,6 @@ public class AlertsTest
     public Workbook getOutputWorkbook() throws IOException
     {
         return Workbook.getWorkbook(new File(OUTPUT_PATH, OUTPUT_FILENAME));
-    }
-
-    public void readExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
-    {
-        // Read the alert condition file
-        logger.info("Loading external service alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+EXTERNAL_SERVICE_CONDITION_TAB);
-        InputStream is = null;
-        try
-        {
-            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
-            InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_FILENAME)
-                .worksheet(EXTERNAL_SERVICE_CONDITION_TAB)
-                .withInputStream(is)
-                .build();
-
-            List<ExternalServiceAlertCondition> conditions = ExternalServiceAlertConditionParser.parse(policies, entities, reader);
-            logger.info("Read "+conditions.size()+" external service alert conditions");
-            config.setExternalServiceAlertConditions(conditions);
-        }
-        catch(FileNotFoundException e)
-        {
-            logger.severe("Unable to find external service alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(is != null)
-                    is.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void writeExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
-    {
-        List<ExternalServiceAlertCondition> conditions = config.getExternalServiceAlertConditions();
-
-        // Write the new conditions to a new tab
-        logger.info("Writing external service alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+EXTERNAL_SERVICE_CONDITION_TAB);
-        OutputStream os = null;
-        OutputFileWriter writer = null;
-        try
-        {
-            Workbook workbook = getOutputWorkbook();
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
-            writer = OutputFileWriter.builder()
-                .name(OUTPUT_FILENAME)
-                .worksheet(EXTERNAL_SERVICE_CONDITION_TAB)
-                .withOutputStream(os)
-                .withWorkbook(workbook)
-                .build();
-
-            ExternalServiceAlertConditionRenderer.write(policies, entities, conditions, writer);
-            logger.info("Wrote "+conditions.size()+" external service alert conditions");
-        }
-        catch(IOException e)
-        {
-            logger.severe("Unable to write external service alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(os != null)
-                    os.close();
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
     }
 
     public void readNrqlAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)

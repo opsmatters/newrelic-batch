@@ -59,6 +59,7 @@ import com.opsmatters.newrelic.batch.parsers.UserChannelParser;
 import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.ExternalServiceAlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
@@ -70,6 +71,7 @@ import com.opsmatters.newrelic.batch.renderers.UserChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.ExternalServiceAlertConditionRenderer;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -1233,6 +1235,34 @@ public class AlertManager
     }
 
     /**
+     * Returns the external service alert conditions for the given policies.
+     * @param policies The alert policies for the alert conditions
+     * @return The external service alert conditions for the given policies
+     */
+    public List<ExternalServiceAlertCondition> getExternalServiceAlertConditions(List<AlertPolicy> policies)
+    {
+        checkInitialize();
+
+        List<ExternalServiceAlertCondition> ret = new ArrayList<ExternalServiceAlertCondition>();
+        for(AlertPolicy policy : policies)
+        {
+            // Get the alert conditions
+            logger.info("Getting the external service alert conditions for policy: "+policy.getId());
+            Collection<ExternalServiceAlertCondition> conditions = apiClient.externalServiceAlertConditions().list(policy.getId());
+            logger.info("Got "+conditions.size()+" external service alert conditions for policy: "+policy.getId());
+
+            // Set the policyId and add the condition to the list
+            for(ExternalServiceAlertCondition condition : conditions)
+            {
+                condition.setPolicyId(policy.getId());
+                ret.add(condition);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Creates the given external service alert conditions.
      * @param conditions The external service alert conditions to create
      * @return The created external service alert conditions
@@ -1324,6 +1354,69 @@ public class AlertManager
             logger.info("Deleting external service alert condition: "+condition.getId());
             apiClient.externalServiceAlertConditions().delete(condition.getId());
             logger.info("Deleted external service alert condition : "+condition.getId()+" - "+condition.getName());
+        }
+    }
+
+    /**
+     * Reads external service alert conditions from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param policies The list of policies for the alert conditions
+     * @param entities The list of entities for the alert conditions
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of external service alert conditions read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<ExternalServiceAlertCondition> readExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, 
+        String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<ExternalServiceAlertCondition> ret = null;
+
+        try
+        {
+            logger.info("Loading external service alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = ExternalServiceAlertConditionParser.parse(policies, entities, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" external service alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes external service alert conditions to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param policies The list of policies for the alert conditions
+     * @param entities The list of entities for the alert conditions
+     * @param conditions The list of external service alert conditions to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, List<ExternalServiceAlertCondition> conditions,
+        String filename, String worksheet, OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing external service alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            ExternalServiceAlertConditionRenderer.write(policies, entities, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" external service alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
         }
     }
 
