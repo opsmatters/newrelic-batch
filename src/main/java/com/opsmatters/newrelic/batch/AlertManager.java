@@ -33,6 +33,16 @@ import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
 import com.opsmatters.newrelic.api.model.applications.Application;
 import com.opsmatters.newrelic.api.model.servers.Server;
 
+//GERALD
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
+import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
+import com.opsmatters.core.documents.InputFileReader;
+import com.opsmatters.core.documents.OutputFileWriter;
+import com.opsmatters.core.documents.Workbook;
+
 /**
  * Manager of operations on alert channels, policies and conditions.
  * 
@@ -110,6 +120,74 @@ public class AlertManager
     public NewRelicInfraApi getInfraApiClient()
     {
         return infraApiClient;
+    }
+
+//GERALD
+    /**
+     * Returns an input file reader for the given file stream.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The input file reader
+     */
+    private InputFileReader getReader(String filename, String worksheet, InputStream stream)
+    {
+         return InputFileReader.builder()
+            .name(filename)
+            .worksheet(worksheet)
+            .withInputStream(stream)
+            .build();
+    }
+
+//GERALD
+    /**
+     * Returns an output file writer for the given file stream.
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to export to
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to
+     * @param stream An output stream for the file
+     * @return The input file reader
+     */
+    private OutputFileWriter getWriter(String filename, String worksheet, Workbook workbook, OutputStream stream)
+    {
+        return OutputFileWriter.builder()
+            .name(filename)
+            .worksheet(worksheet)
+            .withOutputStream(stream)
+            .withWorkbook(workbook)
+            .build();
+    }
+
+    /**
+     * Closes the given input stream.
+     * @param stream The input stream to close
+     */
+    private void closeStream(InputStream stream)
+    {
+        try
+        {
+            if(stream != null)
+                stream.close();
+        }
+        catch(IOException e)
+        {
+        }
+    }
+
+    /**
+     * Closes the given output stream.
+     * @param stream The output stream to close
+     */
+    private void closeStream(OutputStream stream)
+    {
+        try
+        {
+            if(stream != null)
+                stream.close();
+        }
+        catch(IOException e)
+        {
+        }
     }
 
     /**
@@ -229,6 +307,65 @@ public class AlertManager
             logger.info("Deleting alert policy: "+policy.getId());
             apiClient.alertPolicies().delete(policy.getId());
             logger.info("Deleted alert policy : "+policy.getId()+" - "+policy.getName());
+        }
+    }
+
+//GERALD
+    /**
+     * Reads alert policies from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param channels The list of channels for the alert policies
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of alert policies read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<AlertPolicy> readAlertPolicies(List<AlertChannel> channels, String filename, String worksheet, 
+        InputStream stream)
+        throws IOException
+    {
+        List<AlertPolicy> ret = null;
+
+        try
+        {
+            logger.info("Loading alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = AlertPolicyParser.parse(channels, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" alert policies");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+//GERALD
+    /**
+     * Writes alert policies to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of channels for the alert policies
+     * @param policies The list of alert policies to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeAlertPolicies(List<AlertChannel> channels, List<AlertPolicy> policies, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        try
+        {
+            logger.info("Writing alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            AlertPolicyRenderer.write(channels, policies, getWriter(filename, worksheet, workbook, stream));
+            logger.info("Wrote "+policies.size()+" alert policies");
+        }
+        finally
+        {
+            closeStream(stream);
         }
     }
 

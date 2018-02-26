@@ -16,6 +16,7 @@
 
 package com.opsmatters.newrelic.batch;
 
+//GERALD: check
 import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
@@ -147,8 +148,18 @@ public class AlertsTest
         // Get the list of channels
         List<AlertChannel> allChannels = manager.getAlertChannels();
 
-        // Read the alert policies
-        readAlertPolicies(allChannels, config);
+        try
+        {
+//GERALD
+//        readAlertPolicies(allChannels, config);
+            // Read the alert policies
+            config.setAlertPolicies(manager.readAlertPolicies(allChannels, INPUT_FILENAME, ALERT_POLICY_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to read alert policy file: "+e.getClass().getName()+": "+e.getMessage());
+        }
 
         List<AlertPolicy> policies = config.getAlertPolicies();
         Assert.assertTrue(config.numAlertPolicies() > 0);
@@ -210,7 +221,22 @@ public class AlertsTest
         writePagerDutyChannels(config);
         writeVictorOpsChannels(config);
         //writexMattersChannels(config);
-        writeAlertPolicies(allChannels, config);
+
+        try
+        {
+//GERALD
+//            writeAlertPolicies(allChannels, config);
+            // Write the alert policies
+            Workbook workbook = getOutputWorkbook();
+            manager.writeAlertPolicies(allChannels, config.getAlertPolicies(), 
+                OUTPUT_FILENAME, ALERT_POLICY_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write alert policy file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+
         writeAlertConditions(allPolicies, entities, config);
         writeExternalServiceAlertConditions(allPolicies, entities, config);
         writeNrqlAlertConditions(allPolicies, config);
@@ -896,6 +922,7 @@ public class AlertsTest
         }
     }
 
+/* GERALD
     public void readAlertPolicies(List<AlertChannel> channels, AlertConfiguration config)
     {
         // Read the alert policy file
@@ -918,7 +945,7 @@ public class AlertsTest
         {
             logger.severe("Unable to find alert policy file: "+e.getClass().getName()+": "+e.getMessage());
         }
-        catch(Exception e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }
@@ -934,7 +961,8 @@ public class AlertsTest
             }
         }
     }
-
+*/
+/* GERALD
     public void writeAlertPolicies(List<AlertChannel> channels, AlertConfiguration config)
     {
         List<AlertPolicy> policies = config.getAlertPolicies();
@@ -979,7 +1007,7 @@ public class AlertsTest
             }
         }
     }
-
+*/
     public void readAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
     {
         // Read the alert condition file
