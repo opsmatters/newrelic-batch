@@ -176,12 +176,15 @@ public class AlertsTest
 //        readAlertConditions(allPolicies, entities, config);
 //        readExternalServiceAlertConditions(allPolicies, entities, config);
 //        readNrqlAlertConditions(allPolicies, config);
+//        readInfraMetricAlertConditions(allPolicies, config);
             // Read the alert conditions
             config.setAlertConditions(manager.readAlertConditions(allPolicies, entities, INPUT_FILENAME, ALERT_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
             config.setExternalServiceAlertConditions(manager.readExternalServiceAlertConditions(allPolicies, entities, INPUT_FILENAME, EXTERNAL_SERVICE_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
             config.setNrqlAlertConditions(manager.readNrqlAlertConditions(allPolicies, INPUT_FILENAME, NRQL_CONDITION_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+            config.addInfraAlertConditions(manager.readInfraMetricAlertConditions(allPolicies, INPUT_FILENAME, INFRA_METRIC_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
         }
         catch(IOException e)
@@ -190,7 +193,6 @@ public class AlertsTest
         }
 
         // Read the alert conditions
-        readInfraMetricAlertConditions(allPolicies, config);
         readInfraProcessAlertConditions(allPolicies, config);
         readInfraHostAlertConditions(allPolicies, config);
 
@@ -282,6 +284,7 @@ public class AlertsTest
 //        writeAlertConditions(allPolicies, entities, config);
 //        writeExternalServiceAlertConditions(allPolicies, entities, config);
 //        writeNrqlAlertConditions(allPolicies, config);
+//        writeInfraMetricAlertConditions(allPolicies, config);
             // Write the alert conditions
             Workbook workbook = getOutputWorkbook();
             manager.writeAlertConditions(allPolicies, entities, config.getAlertConditions(), 
@@ -297,13 +300,17 @@ public class AlertsTest
             manager.writeNrqlAlertConditions(allPolicies, config.getNrqlAlertConditions(), 
                 OUTPUT_FILENAME, NRQL_CONDITION_TAB, 
                 new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+
+            workbook = getOutputWorkbook();
+            manager.writeInfraMetricAlertConditions(allPolicies, config.getInfraMetricAlertConditions(), 
+                OUTPUT_FILENAME, INFRA_METRIC_CONDITION_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
         }
         catch(IOException e)
         {
             logger.severe("Unable to write alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
 
-        writeInfraMetricAlertConditions(allPolicies, config);
         writeInfraProcessAlertConditions(allPolicies, config);
         writeInfraHostAlertConditions(allPolicies, config);
 
@@ -313,90 +320,6 @@ public class AlertsTest
     public Workbook getOutputWorkbook() throws IOException
     {
         return Workbook.getWorkbook(new File(OUTPUT_PATH, OUTPUT_FILENAME));
-    }
-
-    public void readInfraMetricAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        // Read the alert condition file
-        logger.info("Loading infra metric alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+INFRA_METRIC_CONDITION_TAB);
-        InputStream is = null;
-        try
-        {
-            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
-            InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_FILENAME)
-                .worksheet(INFRA_METRIC_CONDITION_TAB)
-                .withInputStream(is)
-                .build();
-
-            List<InfraMetricAlertCondition> conditions = InfraMetricAlertConditionParser.parse(policies, reader);
-            logger.info("Read "+conditions.size()+" infra metric alert conditions");
-            config.addInfraAlertConditions(conditions);
-        }
-        catch(FileNotFoundException e)
-        {
-            logger.severe("Unable to find infra metric alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(is != null)
-                    is.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void writeInfraMetricAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        List<InfraMetricAlertCondition> conditions = config.getInfraMetricAlertConditions();
-
-        // Write the new conditions to a new tab
-        logger.info("Writing infra metric alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+INFRA_METRIC_CONDITION_TAB);
-        OutputStream os = null;
-        OutputFileWriter writer = null;
-        try
-        {
-            Workbook workbook = getOutputWorkbook();
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
-            writer = OutputFileWriter.builder()
-                .name(OUTPUT_FILENAME)
-                .worksheet(INFRA_METRIC_CONDITION_TAB)
-                .withOutputStream(os)
-                .withWorkbook(workbook)
-                .build();
-
-            InfraMetricAlertConditionRenderer.write(policies, conditions, writer);
-            logger.info("Wrote "+conditions.size()+" infra metric alert conditions");
-        }
-        catch(IOException e)
-        {
-            logger.severe("Unable to write infra metric alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(os != null)
-                    os.close();
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
     }
 
     public void readInfraProcessAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)

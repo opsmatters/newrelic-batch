@@ -401,7 +401,7 @@ public class AlertConfiguration
      * Replaces the infrastructure alert conditions with the given set of alert conditions.
      * @param infraConditions The set of infrastructure alert conditions
      */
-    public void setInfraAlertConditions(List<InfraAlertCondition> infraConditions)
+    public void setInfraAlertConditions(List<? extends InfraAlertCondition> infraConditions)
     {
         this.infraConditions.clear();
         this.infraConditions.addAll(infraConditions);

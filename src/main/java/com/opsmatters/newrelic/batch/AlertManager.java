@@ -46,6 +46,7 @@ import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraMetricAlertCondition;
 import com.opsmatters.newrelic.api.model.applications.Application;
 import com.opsmatters.newrelic.api.model.servers.Server;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
@@ -61,6 +62,7 @@ import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.ExternalServiceAlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.NrqlAlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.InfraMetricAlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
@@ -74,6 +76,7 @@ import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.ExternalServiceAlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.NrqlAlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.InfraMetricAlertConditionRenderer;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -1607,11 +1610,39 @@ public class AlertManager
     }
 
     /**
+     * Returns the infrastructure metric alert conditions for the given policies.
+     * @param policies The alert policies for the alert conditions
+     * @return The infrastructure metric alert conditions for the given policies
+     */
+    public List<InfraMetricAlertCondition> getInfraMetricAlertConditions(List<AlertPolicy> policies)
+    {
+        checkInitialize();
+
+        List<InfraMetricAlertCondition> ret = new ArrayList<InfraMetricAlertCondition>();
+        for(AlertPolicy policy : policies)
+        {
+            // Get the alert conditions
+            logger.info("Getting the infra metric alert conditions for policy: "+policy.getId());
+            Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policy.getId());
+            logger.info("Got "+conditions.size()+" infra metric alert conditions for policy: "+policy.getId());
+
+            // Add the condition to the list
+            for(InfraAlertCondition condition : conditions)
+            {
+                if(condition instanceof InfraMetricAlertCondition)
+                    ret.add((InfraMetricAlertCondition)condition);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Creates the given infrastructure alert conditions.
      * @param conditions The infrastructure alert conditions to create
      * @return The created infrastructure alert conditions
      */
-    public List<InfraAlertCondition> createInfraAlertConditions(List<InfraAlertCondition> conditions)
+    public List<InfraAlertCondition> createInfraAlertConditions(List<? extends InfraAlertCondition> conditions)
     {
         if(conditions == null)
             throw new IllegalArgumentException("null conditions");
@@ -1650,7 +1681,7 @@ public class AlertManager
      * @param conditions The infra alert conditions to delete
      * @return The deleted infra alert conditions
      */
-    public List<InfraAlertCondition> deleteInfraAlertConditions(List<InfraAlertCondition> conditions)
+    public List<InfraAlertCondition> deleteInfraAlertConditions(List<? extends InfraAlertCondition> conditions)
     {
         if(conditions == null)
             throw new IllegalArgumentException("null conditions");
@@ -1698,6 +1729,67 @@ public class AlertManager
             logger.info("Deleting infra alert condition: "+condition.getId());
             infraApiClient.infraAlertConditions().delete(condition.getId());
             logger.info("Deleted infra alert condition : "+condition.getId()+" - "+condition.getName());
+        }
+    }
+
+    /**
+     * Reads infrastructure metric alert conditions from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param policies The list of policies for the alert conditions
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of infrastructure metric alert conditions read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<InfraMetricAlertCondition> readInfraMetricAlertConditions(List<AlertPolicy> policies,  
+        String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<InfraMetricAlertCondition> ret = null;
+
+        try
+        {
+            logger.info("Loading infra metric alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = InfraMetricAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" infra metric alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes infrastructure metric alert conditions to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param policies The list of policies for the alert conditions
+     * @param conditions The list of infrastructure metric alert conditions to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeInfraMetricAlertConditions(List<AlertPolicy> policies, List<InfraMetricAlertCondition> conditions,
+        String filename, String worksheet, OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing infra metric alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            InfraMetricAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" infra metric alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
         }
     }
 
