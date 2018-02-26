@@ -172,11 +172,6 @@ public class AlertsTest
 
         try
         {
-//GERALD
-//        readAlertConditions(allPolicies, entities, config);
-//        readExternalServiceAlertConditions(allPolicies, entities, config);
-//        readNrqlAlertConditions(allPolicies, config);
-//        readInfraMetricAlertConditions(allPolicies, config);
             // Read the alert conditions
             config.setAlertConditions(manager.readAlertConditions(allPolicies, entities, INPUT_FILENAME, ALERT_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
@@ -186,15 +181,15 @@ public class AlertsTest
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
             config.addInfraAlertConditions(manager.readInfraMetricAlertConditions(allPolicies, INPUT_FILENAME, INFRA_METRIC_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+            config.addInfraAlertConditions(manager.readInfraProcessRunningAlertConditions(allPolicies, INPUT_FILENAME, INFRA_PROCESS_CONDITION_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+            config.addInfraAlertConditions(manager.readInfraHostNotReportingAlertConditions(allPolicies, INPUT_FILENAME, INFRA_HOST_CONDITION_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
         }
         catch(IOException e)
         {
             logger.severe("Unable to read alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
-
-        // Read the alert conditions
-        readInfraProcessAlertConditions(allPolicies, config);
-        readInfraHostAlertConditions(allPolicies, config);
 
         // Get the alert conditions
         List<AlertCondition> conditions = config.getAlertConditions();
@@ -280,11 +275,6 @@ public class AlertsTest
 
         try
         {
-//GERALD
-//        writeAlertConditions(allPolicies, entities, config);
-//        writeExternalServiceAlertConditions(allPolicies, entities, config);
-//        writeNrqlAlertConditions(allPolicies, config);
-//        writeInfraMetricAlertConditions(allPolicies, config);
             // Write the alert conditions
             Workbook workbook = getOutputWorkbook();
             manager.writeAlertConditions(allPolicies, entities, config.getAlertConditions(), 
@@ -305,14 +295,21 @@ public class AlertsTest
             manager.writeInfraMetricAlertConditions(allPolicies, config.getInfraMetricAlertConditions(), 
                 OUTPUT_FILENAME, INFRA_METRIC_CONDITION_TAB, 
                 new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+
+            workbook = getOutputWorkbook();
+            manager.writeInfraProcessRunningAlertConditions(allPolicies, config.getInfraProcessRunningAlertConditions(), 
+                OUTPUT_FILENAME, INFRA_PROCESS_CONDITION_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+
+            workbook = getOutputWorkbook();
+            manager.writeInfraHostNotReportingAlertConditions(allPolicies, config.getInfraHostNotReportingAlertConditions(), 
+                OUTPUT_FILENAME, INFRA_HOST_CONDITION_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
         }
         catch(IOException e)
         {
             logger.severe("Unable to write alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
-
-        writeInfraProcessAlertConditions(allPolicies, config);
-        writeInfraHostAlertConditions(allPolicies, config);
 
         logger.info("Completed test: "+testName);
     }
@@ -320,173 +317,5 @@ public class AlertsTest
     public Workbook getOutputWorkbook() throws IOException
     {
         return Workbook.getWorkbook(new File(OUTPUT_PATH, OUTPUT_FILENAME));
-    }
-
-    public void readInfraProcessAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        // Read the alert condition file
-        logger.info("Loading infra process alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+INFRA_PROCESS_CONDITION_TAB);
-        InputStream is = null;
-        try
-        {
-            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
-            InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_FILENAME)
-                .worksheet(INFRA_PROCESS_CONDITION_TAB)
-                .withInputStream(is)
-                .build();
-
-            List<InfraProcessRunningAlertCondition> conditions = InfraProcessRunningAlertConditionParser.parse(policies, reader);
-            logger.info("Read "+conditions.size()+" infra process alert conditions");
-            config.addInfraAlertConditions(conditions);
-        }
-        catch(FileNotFoundException e)
-        {
-            logger.severe("Unable to find infra process alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(is != null)
-                    is.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void writeInfraProcessAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        List<InfraProcessRunningAlertCondition> conditions = config.getInfraProcessRunningAlertConditions();
-
-        // Write the new conditions to a new tab
-        logger.info("Writing infra process alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+INFRA_PROCESS_CONDITION_TAB);
-        OutputStream os = null;
-        OutputFileWriter writer = null;
-        try
-        {
-            Workbook workbook = getOutputWorkbook();
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
-            writer = OutputFileWriter.builder()
-                .name(OUTPUT_FILENAME)
-                .worksheet(INFRA_PROCESS_CONDITION_TAB)
-                .withOutputStream(os)
-                .withWorkbook(workbook)
-                .build();
-
-            InfraProcessRunningAlertConditionRenderer.write(policies, conditions, writer);
-            logger.info("Wrote "+conditions.size()+" infra process alert conditions");
-        }
-        catch(IOException e)
-        {
-            logger.severe("Unable to write infra process alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(os != null)
-                    os.close();
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void readInfraHostAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        // Read the alert condition file
-        logger.info("Loading infra host alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+INFRA_HOST_CONDITION_TAB);
-        InputStream is = null;
-        try
-        {
-            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
-            InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_FILENAME)
-                .worksheet(INFRA_HOST_CONDITION_TAB)
-                .withInputStream(is)
-                .build();
-
-            List<InfraHostNotReportingAlertCondition> conditions = InfraHostNotReportingAlertConditionParser.parse(policies, reader);
-            logger.info("Read "+conditions.size()+" infra host alert conditions");
-            config.addInfraAlertConditions(conditions);
-        }
-        catch(FileNotFoundException e)
-        {
-            logger.severe("Unable to find infra host alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(is != null)
-                    is.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void writeInfraHostAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        List<InfraHostNotReportingAlertCondition> conditions = config.getInfraHostNotReportingAlertConditions();
-
-        // Write the new conditions to a new tab
-        logger.info("Writing infra host alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+INFRA_HOST_CONDITION_TAB);
-        OutputStream os = null;
-        OutputFileWriter writer = null;
-        try
-        {
-            Workbook workbook = getOutputWorkbook();
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
-            writer = OutputFileWriter.builder()
-                .name(OUTPUT_FILENAME)
-                .worksheet(INFRA_HOST_CONDITION_TAB)
-                .withOutputStream(os)
-                .withWorkbook(workbook)
-                .build();
-
-            InfraHostNotReportingAlertConditionRenderer.write(policies, conditions, writer);
-            logger.info("Wrote "+conditions.size()+" infra host alert conditions");
-        }
-        catch(IOException e)
-        {
-            logger.severe("Unable to write infra host alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(os != null)
-                    os.close();
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
     }
 }

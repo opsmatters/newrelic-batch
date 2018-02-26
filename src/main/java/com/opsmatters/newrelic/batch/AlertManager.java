@@ -47,6 +47,8 @@ import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertC
 import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.InfraMetricAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraProcessRunningAlertCondition;
+import com.opsmatters.newrelic.api.model.alerts.conditions.InfraHostNotReportingAlertCondition;
 import com.opsmatters.newrelic.api.model.applications.Application;
 import com.opsmatters.newrelic.api.model.servers.Server;
 import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
@@ -63,6 +65,8 @@ import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.ExternalServiceAlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.NrqlAlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.InfraMetricAlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.InfraProcessRunningAlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.InfraHostNotReportingAlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
@@ -77,6 +81,8 @@ import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.ExternalServiceAlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.NrqlAlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.InfraMetricAlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.InfraProcessRunningAlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.InfraHostNotReportingAlertConditionRenderer;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -1638,6 +1644,62 @@ public class AlertManager
     }
 
     /**
+     * Returns the infrastructure process alert conditions for the given policies.
+     * @param policies The alert policies for the alert conditions
+     * @return The infrastructure process alert conditions for the given policies
+     */
+    public List<InfraProcessRunningAlertCondition> getInfraProcessRunningAlertConditions(List<AlertPolicy> policies)
+    {
+        checkInitialize();
+
+        List<InfraProcessRunningAlertCondition> ret = new ArrayList<InfraProcessRunningAlertCondition>();
+        for(AlertPolicy policy : policies)
+        {
+            // Get the alert conditions
+            logger.info("Getting the infra process alert conditions for policy: "+policy.getId());
+            Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policy.getId());
+            logger.info("Got "+conditions.size()+" infra process alert conditions for policy: "+policy.getId());
+
+            // Add the condition to the list
+            for(InfraAlertCondition condition : conditions)
+            {
+                if(condition instanceof InfraProcessRunningAlertCondition)
+                    ret.add((InfraProcessRunningAlertCondition)condition);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Returns the infrastructure host alert conditions for the given policies.
+     * @param policies The alert policies for the alert conditions
+     * @return The infrastructure host alert conditions for the given policies
+     */
+    public List<InfraHostNotReportingAlertCondition> getInfraHostNotReportingAlertConditions(List<AlertPolicy> policies)
+    {
+        checkInitialize();
+
+        List<InfraHostNotReportingAlertCondition> ret = new ArrayList<InfraHostNotReportingAlertCondition>();
+        for(AlertPolicy policy : policies)
+        {
+            // Get the alert conditions
+            logger.info("Getting the infra host alert conditions for policy: "+policy.getId());
+            Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policy.getId());
+            logger.info("Got "+conditions.size()+" infra host alert conditions for policy: "+policy.getId());
+
+            // Add the condition to the list
+            for(InfraAlertCondition condition : conditions)
+            {
+                if(condition instanceof InfraHostNotReportingAlertCondition)
+                    ret.add((InfraHostNotReportingAlertCondition)condition);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Creates the given infrastructure alert conditions.
      * @param conditions The infrastructure alert conditions to create
      * @return The created infrastructure alert conditions
@@ -1785,6 +1847,128 @@ public class AlertManager
             writer = getWriter(filename, worksheet, workbook, stream);
             InfraMetricAlertConditionRenderer.write(policies, conditions, writer);
             logger.info("Wrote "+conditions.size()+" infra metric alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads infrastructure process alert conditions from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param policies The list of policies for the alert conditions
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of infrastructure process alert conditions read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<InfraProcessRunningAlertCondition> readInfraProcessRunningAlertConditions(List<AlertPolicy> policies,  
+        String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<InfraProcessRunningAlertCondition> ret = null;
+
+        try
+        {
+            logger.info("Loading infra process alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = InfraProcessRunningAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" infra process alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes infrastructure process alert conditions to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param policies The list of policies for the alert conditions
+     * @param conditions The list of infrastructure process alert conditions to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeInfraProcessRunningAlertConditions(List<AlertPolicy> policies, List<InfraProcessRunningAlertCondition> conditions,
+        String filename, String worksheet, OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing infra process alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            InfraProcessRunningAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" infra process alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads infrastructure host alert conditions from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param policies The list of policies for the alert conditions
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of infrastructure host alert conditions read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<InfraHostNotReportingAlertCondition> readInfraHostNotReportingAlertConditions(List<AlertPolicy> policies,  
+        String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<InfraHostNotReportingAlertCondition> ret = null;
+
+        try
+        {
+            logger.info("Loading infra host alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = InfraHostNotReportingAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" infra host alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes infrastructure host alert conditions to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param policies The list of policies for the alert conditions
+     * @param conditions The list of infrastructure host alert conditions to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeInfraHostNotReportingAlertConditions(List<AlertPolicy> policies, List<InfraHostNotReportingAlertCondition> conditions,
+        String filename, String worksheet, OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing infra host alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            InfraHostNotReportingAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" infra host alert conditions");
         }
         finally
         {
