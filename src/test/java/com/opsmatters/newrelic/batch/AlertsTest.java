@@ -175,10 +175,13 @@ public class AlertsTest
 //GERALD
 //        readAlertConditions(allPolicies, entities, config);
 //        readExternalServiceAlertConditions(allPolicies, entities, config);
+//        readNrqlAlertConditions(allPolicies, config);
             // Read the alert conditions
             config.setAlertConditions(manager.readAlertConditions(allPolicies, entities, INPUT_FILENAME, ALERT_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
             config.setExternalServiceAlertConditions(manager.readExternalServiceAlertConditions(allPolicies, entities, INPUT_FILENAME, EXTERNAL_SERVICE_CONDITION_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+            config.setNrqlAlertConditions(manager.readNrqlAlertConditions(allPolicies, INPUT_FILENAME, NRQL_CONDITION_TAB, 
                 new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
         }
         catch(IOException e)
@@ -187,7 +190,6 @@ public class AlertsTest
         }
 
         // Read the alert conditions
-        readNrqlAlertConditions(allPolicies, config);
         readInfraMetricAlertConditions(allPolicies, config);
         readInfraProcessAlertConditions(allPolicies, config);
         readInfraHostAlertConditions(allPolicies, config);
@@ -279,6 +281,7 @@ public class AlertsTest
 //GERALD
 //        writeAlertConditions(allPolicies, entities, config);
 //        writeExternalServiceAlertConditions(allPolicies, entities, config);
+//        writeNrqlAlertConditions(allPolicies, config);
             // Write the alert conditions
             Workbook workbook = getOutputWorkbook();
             manager.writeAlertConditions(allPolicies, entities, config.getAlertConditions(), 
@@ -289,13 +292,17 @@ public class AlertsTest
             manager.writeExternalServiceAlertConditions(allPolicies, entities, config.getExternalServiceAlertConditions(), 
                 OUTPUT_FILENAME, EXTERNAL_SERVICE_CONDITION_TAB, 
                 new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+
+            workbook = getOutputWorkbook();
+            manager.writeNrqlAlertConditions(allPolicies, config.getNrqlAlertConditions(), 
+                OUTPUT_FILENAME, NRQL_CONDITION_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
         }
         catch(IOException e)
         {
-            logger.severe("Unable to write alert policy file: "+e.getClass().getName()+": "+e.getMessage());
+            logger.severe("Unable to write alert condition file: "+e.getClass().getName()+": "+e.getMessage());
         }
 
-        writeNrqlAlertConditions(allPolicies, config);
         writeInfraMetricAlertConditions(allPolicies, config);
         writeInfraProcessAlertConditions(allPolicies, config);
         writeInfraHostAlertConditions(allPolicies, config);
@@ -306,90 +313,6 @@ public class AlertsTest
     public Workbook getOutputWorkbook() throws IOException
     {
         return Workbook.getWorkbook(new File(OUTPUT_PATH, OUTPUT_FILENAME));
-    }
-
-    public void readNrqlAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        // Read the alert condition file
-        logger.info("Loading nrql alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+NRQL_CONDITION_TAB);
-        InputStream is = null;
-        try
-        {
-            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
-            InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_FILENAME)
-                .worksheet(NRQL_CONDITION_TAB)
-                .withInputStream(is)
-                .build();
-
-            List<NrqlAlertCondition> conditions = NrqlAlertConditionParser.parse(policies, reader);
-            logger.info("Read "+conditions.size()+" nrql alert conditions");
-            config.setNrqlAlertConditions(conditions);
-        }
-        catch(FileNotFoundException e)
-        {
-            logger.severe("Unable to find nrql alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(is != null)
-                    is.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void writeNrqlAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)
-    {
-        List<NrqlAlertCondition> conditions = config.getNrqlAlertConditions();
-
-        // Write the new conditions to a new tab
-        logger.info("Writing nrql alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+NRQL_CONDITION_TAB);
-        OutputStream os = null;
-        OutputFileWriter writer = null;
-        try
-        {
-            Workbook workbook = getOutputWorkbook();
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
-            writer = OutputFileWriter.builder()
-                .name(OUTPUT_FILENAME)
-                .worksheet(NRQL_CONDITION_TAB)
-                .withOutputStream(os)
-                .withWorkbook(workbook)
-                .build();
-
-            NrqlAlertConditionRenderer.write(policies, conditions, writer);
-            logger.info("Wrote "+conditions.size()+" nrql alert conditions");
-        }
-        catch(IOException e)
-        {
-            logger.severe("Unable to write nrql alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(os != null)
-                    os.close();
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
     }
 
     public void readInfraMetricAlertConditions(List<AlertPolicy> policies, AlertConfiguration config)

@@ -60,6 +60,7 @@ import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
 import com.opsmatters.newrelic.batch.parsers.ExternalServiceAlertConditionParser;
+import com.opsmatters.newrelic.batch.parsers.NrqlAlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
@@ -72,6 +73,7 @@ import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
 import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 import com.opsmatters.newrelic.batch.renderers.ExternalServiceAlertConditionRenderer;
+import com.opsmatters.newrelic.batch.renderers.NrqlAlertConditionRenderer;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -1421,6 +1423,34 @@ public class AlertManager
     }
 
     /**
+     * Returns the NRQL alert conditions for the given policies.
+     * @param policies The alert policies for the alert conditions
+     * @return The NRQL alert conditions for the given policies
+     */
+    public List<NrqlAlertCondition> getNrqlAlertConditions(List<AlertPolicy> policies)
+    {
+        checkInitialize();
+
+        List<NrqlAlertCondition> ret = new ArrayList<NrqlAlertCondition>();
+        for(AlertPolicy policy : policies)
+        {
+            // Get the alert conditions
+            logger.info("Getting the NRQL alert conditions for policy: "+policy.getId());
+            Collection<NrqlAlertCondition> conditions = apiClient.nrqlAlertConditions().list(policy.getId());
+            logger.info("Got "+conditions.size()+" NRQL alert conditions for policy: "+policy.getId());
+
+            // Set the policyId and add the condition to the list
+            for(NrqlAlertCondition condition : conditions)
+            {
+                condition.setPolicyId(policy.getId());
+                ret.add(condition);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Creates the given NRQL alert conditions.
      * @param conditions The NRQL alert conditions to create
      * @return The created NRQL alert conditions
@@ -1512,6 +1542,67 @@ public class AlertManager
             logger.info("Deleting NRQL alert condition: "+condition.getId());
             apiClient.nrqlAlertConditions().delete(condition.getId());
             logger.info("Deleted i alert condition : "+condition.getId()+" - "+condition.getName());
+        }
+    }
+
+    /**
+     * Reads NRQL alert conditions from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param policies The list of policies for the alert conditions
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of NRQL alert conditions read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<NrqlAlertCondition> readNrqlAlertConditions(List<AlertPolicy> policies,  
+        String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<NrqlAlertCondition> ret = null;
+
+        try
+        {
+            logger.info("Loading NRQL alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = NrqlAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" NRQL alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes NRQL alert conditions to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param policies The list of policies for the alert conditions
+     * @param conditions The list of NRQL alert conditions to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeNrqlAlertConditions(List<AlertPolicy> policies, List<NrqlAlertCondition> conditions,
+        String filename, String worksheet, OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing NRQL alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            NrqlAlertConditionRenderer.write(policies, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" NRQL alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
         }
     }
 
