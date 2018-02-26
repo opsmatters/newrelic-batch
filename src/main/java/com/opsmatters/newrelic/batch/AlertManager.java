@@ -16,15 +16,30 @@
 
 package com.opsmatters.newrelic.batch;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
+import com.opsmatters.core.documents.InputFileReader;
+import com.opsmatters.core.documents.OutputFileWriter;
+import com.opsmatters.core.documents.Workbook;
 import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.NewRelicInfraApi;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.EmailChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.SlackChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.HipChatChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.CampfireChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.OpsGenieChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.PagerDutyChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.VictorOpsChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.UserChannel;
+import com.opsmatters.newrelic.api.model.alerts.channels.xMattersChannel;
 import com.opsmatters.newrelic.api.model.alerts.conditions.BaseCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.AlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.ExternalServiceAlertCondition;
@@ -32,16 +47,26 @@ import com.opsmatters.newrelic.api.model.alerts.conditions.NrqlAlertCondition;
 import com.opsmatters.newrelic.api.model.alerts.conditions.InfraAlertCondition;
 import com.opsmatters.newrelic.api.model.applications.Application;
 import com.opsmatters.newrelic.api.model.servers.Server;
-
-//GERALD
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.IOException;
+import com.opsmatters.newrelic.batch.parsers.EmailChannelParser;
+import com.opsmatters.newrelic.batch.parsers.SlackChannelParser;
+import com.opsmatters.newrelic.batch.parsers.HipChatChannelParser;
+import com.opsmatters.newrelic.batch.parsers.CampfireChannelParser;
+import com.opsmatters.newrelic.batch.parsers.OpsGenieChannelParser;
+import com.opsmatters.newrelic.batch.parsers.PagerDutyChannelParser;
+import com.opsmatters.newrelic.batch.parsers.VictorOpsChannelParser;
+import com.opsmatters.newrelic.batch.parsers.UserChannelParser;
+import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
 import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
-import com.opsmatters.core.documents.InputFileReader;
-import com.opsmatters.core.documents.OutputFileWriter;
-import com.opsmatters.core.documents.Workbook;
+import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.CampfireChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.OpsGenieChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.PagerDutyChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.VictorOpsChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.UserChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -122,7 +147,6 @@ public class AlertManager
         return infraApiClient;
     }
 
-//GERALD
     /**
      * Returns an input file reader for the given file stream.
      * @param filename The name of the file to import
@@ -139,7 +163,6 @@ public class AlertManager
             .build();
     }
 
-//GERALD
     /**
      * Returns an output file writer for the given file stream.
      * @param filename The name of the file to export to
@@ -156,6 +179,16 @@ public class AlertManager
             .withOutputStream(stream)
             .withWorkbook(workbook)
             .build();
+    }
+
+    /**
+     * Closes the given output writer.
+     * @param writer The output writer to close
+     */
+    private void closeWriter(OutputFileWriter writer)
+    {
+        if(writer != null)
+            writer.close();
     }
 
     /**
@@ -245,7 +278,7 @@ public class AlertManager
         if(channels != null)
         {
             for(Long channelId : channels.getChannelIds())
-            {
+				{
                 if(channelId != null)
                 {
                     apiClient.alertPolicyChannels().update(policy.getId(), channelId);
@@ -310,7 +343,6 @@ public class AlertManager
         }
     }
 
-//GERALD
     /**
      * Reads alert policies from an import file with the given name.
      * Closes the stream after reading the file.
@@ -341,7 +373,6 @@ public class AlertManager
         return ret;
     }
 
-//GERALD
     /**
      * Writes alert policies to an export file with the given name.
      * Closes the stream after writing the file.
@@ -357,15 +388,19 @@ public class AlertManager
         OutputStream stream, Workbook workbook)
         throws IOException
     {
+        OutputFileWriter writer = null;
+
         try
         {
             logger.info("Writing alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
-            AlertPolicyRenderer.write(channels, policies, getWriter(filename, worksheet, workbook, stream));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            AlertPolicyRenderer.write(channels, policies, writer);
             logger.info("Wrote "+policies.size()+" alert policies");
         }
         finally
         {
             closeStream(stream);
+            closeWriter(writer);
         }
     }
 
@@ -472,6 +507,528 @@ public class AlertManager
             logger.info("Deleting alert channel: "+channel.getId());
             apiClient.alertChannels().delete(channel.getId());
             logger.info("Deleted alert channel : "+channel.getId()+" - "+channel.getName());
+        }
+    }
+
+    /**
+     * Reads email alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of email alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<EmailChannel> readEmailChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<EmailChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading email alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = EmailChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" email alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes email alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of email alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeEmailChannels(List<EmailChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing email alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            EmailChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" email alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads Slack alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of Slack alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<SlackChannel> readSlackChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<SlackChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading Slack alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = SlackChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" Slack alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes Slack alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of Slack alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeSlackChannels(List<SlackChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing Slack alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            SlackChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" Slack alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads HipChat alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of HipChat alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<HipChatChannel> readHipChatChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<HipChatChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading HipChat alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = HipChatChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" HipChat alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes HipChat alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of HipChat alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeHipChatChannels(List<HipChatChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing HipChat alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            HipChatChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" HipChat alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads Campfire alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of Campfire alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<CampfireChannel> readCampfireChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<CampfireChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading Campfire alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = CampfireChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" Campfire alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes Campfire alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of Campfire alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeCampfireChannels(List<CampfireChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing Campfire alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            CampfireChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" Campfire alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads OpsGenie alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of OpsGenie alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<OpsGenieChannel> readOpsGenieChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<OpsGenieChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading OpsGenie alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = OpsGenieChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" OpsGenie alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes OpsGenie alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of OpsGenie alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeOpsGenieChannels(List<OpsGenieChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing OpsGenie alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            OpsGenieChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" OpsGenie alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads PagerDuty alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of PagerDuty alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<PagerDutyChannel> readPagerDutyChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<PagerDutyChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading PagerDuty alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = PagerDutyChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" PagerDuty alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes PagerDuty alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of PagerDuty alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writePagerDutyChannels(List<PagerDutyChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing PagerDuty alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            PagerDutyChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" PagerDuty alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads VictorOps alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of VictorOps alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<VictorOpsChannel> readVictorOpsChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<VictorOpsChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading VictorOps alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = VictorOpsChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" VictorOps alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes VictorOps alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of VictorOps alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeVictorOpsChannels(List<VictorOpsChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing VictorOps alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            VictorOpsChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" VictorOps alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads User alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of User alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<UserChannel> readUserChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<UserChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading User alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = UserChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" User alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes User alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of User alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeUserChannels(List<UserChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing User alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            UserChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" User alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
+        }
+    }
+
+    /**
+     * Reads xMatters alert channels from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of xMatters alert channels read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<xMattersChannel> readxMattersChannels(String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<xMattersChannel> ret = null;
+
+        try
+        {
+            logger.info("Loading xMatters alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = xMattersChannelParser.parse(getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" xMatters alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes xMatters alert channels to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param channels The list of xMatters alert channels to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writexMattersChannels(List<xMattersChannel> channels, String filename, String worksheet, 
+        OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing xMatters alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            xMattersChannelRenderer.write(channels, writer);
+            logger.info("Wrote "+channels.size()+" xMatters alert channels");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
         }
     }
 
