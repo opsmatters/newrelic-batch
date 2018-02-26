@@ -48,12 +48,12 @@ public abstract class MetricConditionRenderer<T extends MetricCondition> extends
     /**
      * Writes the given alert conditions to a writer.
      * @param policies The set of alert policies for the conditions
-     * @param conditions The alert conditions to be serialized
      * @param entities The set of entities for the condition
+     * @param conditions The alert conditions to be serialized
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public void render(List<AlertPolicy> policies, List<T> conditions, List<Entity> entities, OutputFileWriter writer)
+    public void render(List<AlertPolicy> policies, List<Entity> entities, List<T> conditions, OutputFileWriter writer)
         throws IOException
     {
         List<String[]> lines = new ArrayList<String[]>();

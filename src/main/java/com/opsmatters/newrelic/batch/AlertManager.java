@@ -28,6 +28,7 @@ import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.core.documents.Workbook;
 import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.NewRelicInfraApi;
+import com.opsmatters.newrelic.api.model.Entity;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyChannel;
 import com.opsmatters.newrelic.api.model.alerts.channels.AlertChannel;
@@ -57,7 +58,7 @@ import com.opsmatters.newrelic.batch.parsers.VictorOpsChannelParser;
 import com.opsmatters.newrelic.batch.parsers.UserChannelParser;
 import com.opsmatters.newrelic.batch.parsers.xMattersChannelParser;
 import com.opsmatters.newrelic.batch.parsers.AlertPolicyParser;
-import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
+import com.opsmatters.newrelic.batch.parsers.AlertConditionParser;
 import com.opsmatters.newrelic.batch.renderers.EmailChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.SlackChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.HipChatChannelRenderer;
@@ -67,6 +68,8 @@ import com.opsmatters.newrelic.batch.renderers.PagerDutyChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.VictorOpsChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.UserChannelRenderer;
 import com.opsmatters.newrelic.batch.renderers.xMattersChannelRenderer;
+import com.opsmatters.newrelic.batch.renderers.AlertPolicyRenderer;
+import com.opsmatters.newrelic.batch.renderers.AlertConditionRenderer;
 
 /**
  * Manager of operations on alert channels, policies and conditions.
@@ -1044,6 +1047,34 @@ public class AlertManager
     }
 
     /**
+     * Returns the alert conditions for the given policies.
+     * @param policies The alert policies for the alert conditions
+     * @return The alert conditions for the given policies
+     */
+    public List<AlertCondition> getAlertConditions(List<AlertPolicy> policies)
+    {
+        checkInitialize();
+
+        List<AlertCondition> ret = new ArrayList<AlertCondition>();
+        for(AlertPolicy policy : policies)
+        {
+            // Get the alert conditions
+            logger.info("Getting the alert conditions for policy: "+policy.getId());
+            Collection<AlertCondition> conditions = apiClient.alertConditions().list(policy.getId());
+            logger.info("Got "+conditions.size()+" alert conditions for policy: "+policy.getId());
+
+            // Set the policyId and add the condition to the list
+            for(AlertCondition condition : conditions)
+            {
+                condition.setPolicyId(policy.getId());
+                ret.add(condition);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Creates the given alert conditions.
      * @param conditions The alert conditions to create
      * @return The created alert conditions
@@ -1135,6 +1166,69 @@ public class AlertManager
             logger.info("Deleting alert condition: "+condition.getId());
             apiClient.alertConditions().delete(condition.getId());
             logger.info("Deleted alert condition : "+condition.getId()+" - "+condition.getName());
+        }
+    }
+
+    /**
+     * Reads alert conditions from an import file with the given name.
+     * Closes the stream after reading the file.
+     * @param policies The list of policies for the alert conditions
+     * @param entities The list of entities for the alert conditions
+     * @param filename The name of the file to import
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An input stream for the file
+     * @return The set of alert conditions read from the import file
+     * @throws IOException if there is an error reading the import file
+     */
+    public List<AlertCondition> readAlertConditions(List<AlertPolicy> policies, List<Entity> entities, 
+        String filename, String worksheet, InputStream stream)
+        throws IOException
+    {
+        List<AlertCondition> ret = null;
+
+        try
+        {
+            logger.info("Loading alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            ret = AlertConditionParser.parse(policies, entities, getReader(filename, worksheet, stream));
+            logger.info("Read "+ret.size()+" alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes alert conditions to an export file with the given name.
+     * Closes the stream after writing the file.
+     * @param policies The list of policies for the alert conditions
+     * @param entities The list of entities for the alert conditions
+     * @param conditions The list of alert conditions to be exported
+     * @param filename The name of the file to export to
+     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
+     * @param stream An output stream for the file
+     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to (or null to create a new workbook)
+     * @throws IOException if there is an error reading the import file
+     */
+    public void writeAlertConditions(List<AlertPolicy> policies, List<Entity> entities, List<AlertCondition> conditions,
+        String filename, String worksheet, OutputStream stream, Workbook workbook)
+        throws IOException
+    {
+        OutputFileWriter writer = null;
+
+        try
+        {
+            logger.info("Writing alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            writer = getWriter(filename, worksheet, workbook, stream);
+            AlertConditionRenderer.write(policies, entities, conditions, writer);
+            logger.info("Wrote "+conditions.size()+" alert conditions");
+        }
+        finally
+        {
+            closeStream(stream);
+            closeWriter(writer);
         }
     }
 

@@ -56,15 +56,15 @@ public class AlertConditionRenderer extends MetricConditionRenderer<AlertConditi
     /**
      * Writes the given alert conditions to a writer.
      * @param policies The set of alert policies for the conditions
-     * @param conditions The alert conditions to be serialized
      * @param entities The set of entities for the condition
+     * @param conditions The alert conditions to be serialized
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public static void write(List<AlertPolicy> policies, List<AlertCondition> conditions, List<Entity> entities, OutputFileWriter writer)
+    public static void write(List<AlertPolicy> policies, List<Entity> entities, List<AlertCondition> conditions, OutputFileWriter writer)
         throws IOException
     {
-        new AlertConditionRenderer().render(policies, conditions, entities, writer);
+        new AlertConditionRenderer().render(policies, entities, conditions, writer);
     }
 
     /**
@@ -96,7 +96,7 @@ public class AlertConditionRenderer extends MetricConditionRenderer<AlertConditi
         line.add(critical.getThreshold());
         line.add(critical.getDuration());
         line.add(critical.getTimeFunction());
-        line.add(Integer.toString(condition.getViolationCloseTimer()));
+        line.add(condition.getViolationCloseTimer() != null ? Integer.toString(condition.getViolationCloseTimer()) : "");
         line.add(fromItemList(entities));
         return line.toArray(new String[]{});
     }

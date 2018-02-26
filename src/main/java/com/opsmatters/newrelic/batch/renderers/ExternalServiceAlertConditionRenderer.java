@@ -56,15 +56,15 @@ public class ExternalServiceAlertConditionRenderer extends MetricConditionRender
     /**
      * Writes the given alert conditions to a writer.
      * @param policies The set of alert policies for the conditions
-     * @param conditions The alert conditions to be serialized
      * @param entities The set of entities for the condition
+     * @param conditions The alert conditions to be serialized
      * @param writer The writer to use to serialize the alert conditions
      * @throws IOException if there was an error writing the alert conditions
      */
-    public static void write(List<AlertPolicy> policies, List<ExternalServiceAlertCondition> conditions, List<Entity> entities, OutputFileWriter writer)
+    public static void write(List<AlertPolicy> policies, List<Entity> entities, List<ExternalServiceAlertCondition> conditions, OutputFileWriter writer)
         throws IOException
     {
-        new ExternalServiceAlertConditionRenderer().render(policies, conditions, entities, writer);
+        new ExternalServiceAlertConditionRenderer().render(policies, entities, conditions, writer);
     }
 
     /**

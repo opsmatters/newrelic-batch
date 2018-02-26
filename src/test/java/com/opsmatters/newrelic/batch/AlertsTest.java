@@ -170,8 +170,20 @@ public class AlertsTest
         entities.addAll(manager.getApplications());
         entities.addAll(manager.getServers());
 
+        try
+        {
+//GERALD
+//        readAlertConditions(allPolicies, entities, config);
+            // Read the alert conditions
+            config.setAlertConditions(manager.readAlertConditions(allPolicies, entities, INPUT_FILENAME, ALERT_CONDITION_TAB, 
+                new FileInputStream(INPUT_PATH+INPUT_FILENAME)));
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to read alert condition file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+
         // Read the alert conditions
-        readAlertConditions(allPolicies, entities, config);
         readExternalServiceAlertConditions(allPolicies, entities, config);
         readNrqlAlertConditions(allPolicies, config);
         readInfraMetricAlertConditions(allPolicies, config);
@@ -260,7 +272,21 @@ public class AlertsTest
             logger.severe("Unable to write alert policy file: "+e.getClass().getName()+": "+e.getMessage());
         }
 
-        writeAlertConditions(allPolicies, entities, config);
+        try
+        {
+//GERALD
+//        writeAlertConditions(allPolicies, entities, config);
+            // Write the alert conditions
+            Workbook workbook = getOutputWorkbook();
+            manager.writeAlertConditions(allPolicies, entities, config.getAlertConditions(), 
+                OUTPUT_FILENAME, ALERT_CONDITION_TAB, 
+                new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME), workbook);
+        }
+        catch(IOException e)
+        {
+            logger.severe("Unable to write alert policy file: "+e.getClass().getName()+": "+e.getMessage());
+        }
+
         writeExternalServiceAlertConditions(allPolicies, entities, config);
         writeNrqlAlertConditions(allPolicies, config);
         writeInfraMetricAlertConditions(allPolicies, config);
@@ -273,90 +299,6 @@ public class AlertsTest
     public Workbook getOutputWorkbook() throws IOException
     {
         return Workbook.getWorkbook(new File(OUTPUT_PATH, OUTPUT_FILENAME));
-    }
-
-    public void readAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
-    {
-        // Read the alert condition file
-        logger.info("Loading alert condition file: "+INPUT_PATH+INPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
-        InputStream is = null;
-        try
-        {
-            is = new FileInputStream(INPUT_PATH+INPUT_FILENAME);
-            InputFileReader reader = InputFileReader.builder()
-                .name(INPUT_FILENAME)
-                .worksheet(ALERT_CONDITION_TAB)
-                .withInputStream(is)
-                .build();
-
-            List<AlertCondition> conditions = AlertConditionParser.parse(policies, entities, reader);
-            logger.info("Read "+conditions.size()+" alert conditions");
-            config.setAlertConditions(conditions);
-        }
-        catch(FileNotFoundException e)
-        {
-            logger.severe("Unable to find alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(is != null)
-                    is.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-    }
-
-    public void writeAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
-    {
-        List<AlertCondition> conditions = config.getAlertConditions();
-
-        // Write the new conditions to a new tab
-        logger.info("Writing alert condition file: "+OUTPUT_PATH+OUTPUT_FILENAME+"/"+ALERT_CONDITION_TAB);
-        OutputStream os = null;
-        OutputFileWriter writer = null;
-        try
-        {
-            Workbook workbook = getOutputWorkbook();
-            os = new FileOutputStream(OUTPUT_PATH+OUTPUT_FILENAME);
-            writer = OutputFileWriter.builder()
-                .name(OUTPUT_FILENAME)
-                .worksheet(ALERT_CONDITION_TAB)
-                .withOutputStream(os)
-                .withWorkbook(workbook)
-                .build();
-
-            AlertConditionRenderer.write(policies, conditions, entities, writer);
-            logger.info("Wrote "+conditions.size()+" alert conditions");
-        }
-        catch(IOException e)
-        {
-            logger.severe("Unable to write alert condition file: "+e.getClass().getName()+": "+e.getMessage());
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(os != null)
-                    os.close();
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
     }
 
     public void readExternalServiceAlertConditions(List<AlertPolicy> policies, List<Entity> entities, AlertConfiguration config)
@@ -417,7 +359,7 @@ public class AlertsTest
                 .withWorkbook(workbook)
                 .build();
 
-            ExternalServiceAlertConditionRenderer.write(policies, conditions, entities, writer);
+            ExternalServiceAlertConditionRenderer.write(policies, entities, conditions, writer);
             logger.info("Wrote "+conditions.size()+" external service alert conditions");
         }
         catch(IOException e)
