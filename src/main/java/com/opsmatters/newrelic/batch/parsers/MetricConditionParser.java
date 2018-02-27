@@ -57,7 +57,7 @@ public abstract class MetricConditionParser<T extends MetricCondition> extends T
         FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
         AlertPolicyList policyList = new AlertPolicyList(policies);
         EntityList entityList = new EntityList(entities);
-        logger.info("Processing "+file.getType()+" file: policies="+policies.size()
+        logger.fine("Processing "+file.getType()+" file: policies="+policies.size()
             +" entities="+entities.size()+" headers="+headers.length+" lines="+lines.size());
 
         file.checkColumns();

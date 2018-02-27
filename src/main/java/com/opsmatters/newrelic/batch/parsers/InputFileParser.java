@@ -42,7 +42,7 @@ public abstract class InputFileParser<T> extends BaseParser
     {
         List<T> ret = new ArrayList<T>();
         FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
-        logger.info("Processing "+file.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        logger.fine("Processing "+file.getType()+" file: headers="+headers.length+" lines="+lines.size());
 
         file.checkColumns();
         for(String[] line : lines)

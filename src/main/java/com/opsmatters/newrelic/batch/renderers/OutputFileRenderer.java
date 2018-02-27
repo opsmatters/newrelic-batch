@@ -49,7 +49,7 @@ public abstract class OutputFileRenderer<T>
         for(T item : items)
             lines.add(serialize(template, item));
 
-        logger.info("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        logger.fine("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
         writer.write(lines);
     }
 

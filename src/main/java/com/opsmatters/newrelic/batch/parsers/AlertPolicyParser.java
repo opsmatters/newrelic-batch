@@ -91,7 +91,7 @@ public class AlertPolicyParser extends InputFileParser<AlertPolicy>
         List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
         FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
         AlertChannelList channelList = new AlertChannelList(channels);
-        logger.info("Processing "+file.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        logger.fine("Processing "+file.getType()+" file: headers="+headers.length+" lines="+lines.size());
 
         file.checkColumns();
         for(String[] line : lines)

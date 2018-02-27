@@ -79,7 +79,7 @@ public class AlertPolicyRenderer extends OutputFileRenderer<AlertPolicy>
         for(AlertPolicy policy : policies)
             lines.add(serialize(channels, template, policy));
 
-        logger.info("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        logger.fine("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
         writer.write(lines);
     }
 

@@ -53,7 +53,7 @@ public abstract class BaseConditionParser<T extends BaseCondition> extends Input
         List<T> ret = new ArrayList<T>();
         FileInstance file = TemplateFactory.getTemplate(getClass()).getInstance(headers);
         AlertPolicyList policyList = new AlertPolicyList(policies);
-        logger.info("Processing "+file.getType()+" file: policies="+policies.size()
+        logger.fine("Processing "+file.getType()+" file: policies="+policies.size()
             +" headers="+headers.length+" lines="+lines.size());
 
         file.checkColumns();

@@ -68,7 +68,7 @@ public abstract class BaseConditionRenderer<T extends BaseCondition> extends Out
             lines.add(serialize(template, policy, condition));
         }
 
-        logger.info("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        logger.fine("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
         writer.write(lines);
     }
 

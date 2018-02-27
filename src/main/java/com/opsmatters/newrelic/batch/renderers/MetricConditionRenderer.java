@@ -73,7 +73,7 @@ public abstract class MetricConditionRenderer<T extends MetricCondition> extends
             lines.add(serialize(entityList.list(condition.getEntities()), template, policy, condition));
         }
 
-        logger.info("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
+        logger.fine("Rendering "+template.getType()+" file: headers="+headers.length+" lines="+lines.size());
         writer.write(lines);
     }
 
