@@ -232,7 +232,8 @@ public class DashboardRenderer
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
         putAs(ret, Dashboard.ICON, dashboard.getIcon());
-        putAs(ret, Metadata.VERSION, dashboard.getMetadata() != null, dashboard.getMetadata().getVersion());
+        if(dashboard.getMetadata() != null)
+            putAs(ret, Metadata.VERSION, dashboard.getMetadata().getVersion());
         putAs(ret, Dashboard.VISIBILITY, dashboard.getVisibility());
         putAs(ret, Dashboard.EDITABLE, dashboard.getEditable());
         putAs(ret, Dashboard.WIDGETS, dashboard.getWidgets() != null, toWidgetMap(dashboard.getWidgets()));
@@ -261,8 +262,11 @@ public class DashboardRenderer
     private Map<String,Object> toWidgetMap(List<Widget> widgets)
     {
         Map<String,Object> ret = new LinkedHashMap<String,Object>();
-        for(Widget widget : widgets)
-            putAs(ret, widget.getPresentation().getTitle(), widget.getPresentation() != null, toMap(widget));
+        if(widgets != null)
+        {
+            for(Widget widget : widgets)
+                putAs(ret, widget.getPresentation().getTitle(), widget.getPresentation() != null, toMap(widget));
+        }
         return ret;
     }
 

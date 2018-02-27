@@ -241,7 +241,7 @@ public class DashboardParser extends BaseParser
             .visualization(visualization)
             .addData(getEventsData(getAs(map, Widget.DATA, Map.class)));
 
-        Integer id = getAs(map, DrilldownPresentation.DRILLDOWN_DASHBOARD_ID, Integer.class);
+        Integer id = getAs(map, DrilldownPresentation.DRILLDOWN_DASHBOARD_ID, Integer.class, false);
         if(id != null)
             builder = builder.drilldownDashboardId(id);
 
@@ -414,10 +414,14 @@ public class DashboardParser extends BaseParser
      */
     private Threshold getThreshold(Map<String,Object> map)
     {
-        return Threshold.builder()
-            .red(getAs(map, Threshold.RED, Integer.class))
-            .yellow(getAs(map, Threshold.YELLOW, Integer.class))
-            .build();
+        Threshold.Builder builder = Threshold.builder();
+        Integer red = getAs(map, Threshold.RED, Integer.class);
+        Integer yellow = getAs(map, Threshold.YELLOW, Integer.class, false);
+        if(red != null)
+            builder = builder.red(red);
+        if(yellow != null)
+            builder = builder.yellow(yellow);
+        return builder.build();
     }
 
     /**

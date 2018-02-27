@@ -259,18 +259,10 @@ built.on=${TODAY}
 
 <dependencies>
 
-<!-- GERALD
-<dependency>
-  <groupId>com.opsmatters</groupId>
-  <artifactId>newrelic-api</artifactId>
-  <version>1.0.9</version>
-</dependency>
--->
-
 <dependency>
   <groupId>com.opsmatters</groupId>
   <artifactId>opsmatters-core</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 
 <dependency>

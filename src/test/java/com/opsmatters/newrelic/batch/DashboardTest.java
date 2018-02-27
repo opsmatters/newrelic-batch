@@ -16,9 +16,7 @@
 
 package com.opsmatters.newrelic.batch;
 
-import java.io.Reader;
 import java.io.FileReader;
-import java.io.Writer;
 import java.io.FileWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,8 +26,6 @@ import org.junit.Test;
 import junit.framework.Assert;
 import com.opsmatters.newrelic.api.Constants;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
-import com.opsmatters.newrelic.batch.parsers.DashboardParser;
-import com.opsmatters.newrelic.batch.renderers.DashboardRenderer;
 import com.opsmatters.newrelic.batch.model.DashboardConfiguration;
 
 /**
@@ -54,40 +50,21 @@ public class DashboardTest
         String testName = "NewRelicDashboardTest";
         logger.info("Starting test: "+testName);
 
+        DashboardManager manager = new DashboardManager(apiKey, true);
         DashboardConfiguration config = new DashboardConfiguration();
 
         // Read the dashboard file
-        logger.info("Loading dashboard file: "+PATH+INPUT_FILENAME);
-        Reader reader = null;
         try
         {
-            reader = new FileReader(PATH+INPUT_FILENAME);
-            config.setDashboards(DashboardParser.parseYaml(reader));
+            config.setDashboards(manager.readDashboards(INPUT_FILENAME, new FileReader(PATH+INPUT_FILENAME)));
         }
         catch(FileNotFoundException e)
         {
             logger.severe("Unable to find dashboard file: "+e.getClass().getName()+": "+e.getMessage());
         }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(reader != null)
-                    reader.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
 
         List<Dashboard> dashboards = config.getDashboards();
         Assert.assertTrue(config.numDashboards() > 0);
-
-        DashboardManager manager = new DashboardManager(apiKey);
 
         // Delete the existing dashboards
         List<Dashboard> deleted = manager.deleteDashboards(config.getDashboards());
@@ -97,36 +74,15 @@ public class DashboardTest
         List<Dashboard> created = manager.createDashboards(config.getDashboards());
         Assert.assertTrue(created.size() == dashboards.size());
 
-        // Write the new dashboards to a new filename
-        logger.info("Writing dashboard file: "+PATH+OUTPUT_FILENAME);
-        Writer writer = null;
         try
         {
-            writer = new FileWriter(PATH+OUTPUT_FILENAME);
-            DashboardRenderer.builder().withBanner(true).title(OUTPUT_FILENAME).build().renderYaml(dashboards, writer);
+            // Write the new dashboards to a new filename
+            manager.writeDashboards(dashboards, OUTPUT_FILENAME, new FileWriter(PATH+OUTPUT_FILENAME));
         }
         catch(IOException e)
         {
             logger.severe("Unable to write dashboard file: "+e.getClass().getName()+": "+e.getMessage());
         }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if(writer != null)
-                    writer.close();
-            }
-            catch(IOException e)
-            {
-            }
-        }
-
-        // Compare the old and new YAML files
-        //Assert.assertEquals(DashboardParser.toYaml(dashboards), DashboardParser.toYaml(created));
 
         logger.info("Completed test: "+testName);
     }

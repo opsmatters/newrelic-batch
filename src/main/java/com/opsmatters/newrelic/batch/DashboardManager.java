@@ -16,25 +16,24 @@
 
 package com.opsmatters.newrelic.batch;
 
+import java.io.Reader;
+import java.io.Writer;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
-import com.opsmatters.newrelic.api.NewRelicApi;
 import com.opsmatters.newrelic.api.model.insights.Dashboard;
+import com.opsmatters.newrelic.batch.parsers.DashboardParser;
+import com.opsmatters.newrelic.batch.renderers.DashboardRenderer;
 
 /**
  * Manager of operations on dashboards.
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class DashboardManager
+public class DashboardManager extends BaseManager
 {
     private static final Logger logger = Logger.getLogger(DashboardManager.class.getName());
-
-    private String apiKey;
-    private NewRelicApi apiClient;
-    private boolean initialized = false;
 
     /**
      * Constructor that takes an API key.
@@ -42,70 +41,44 @@ public class DashboardManager
      */
     public DashboardManager(String apiKey)
     {
-        this.apiKey = apiKey;
+        this(apiKey, false);
     }
 
     /**
-     * Initialise the clients.
+     * Constructor that takes an API key and a verbose flag.
+     * @param apiKey The API key used to authenticate the client
+     * @param verbose <CODE>true</CODE> if verbose logging is enabled
      */
-    private void checkInitialize()
+    public DashboardManager(String apiKey, boolean verbose)
     {
-        if(!initialized)
-            initialize();
-    }
-
-    /**
-     * Called after setting configuration properties.
-     */
-    public void initialize()
-    {
-        if(apiKey == null)
-            throw new IllegalArgumentException("null API key");
-
-        initialized = false;
-
-        logger.info("Initialising the client");
-        apiClient = NewRelicApi.builder().apiKey(apiKey).build();
-        logger.info("Initialised the clients");
-
-        initialized = true;
-    }
-
-    /**
-     * Returns <CODE>true</CODE> if the clients have been initialized.
-     * @return <CODE>true</CODE> if the clients have been initialized
-     */
-    public boolean isInitialized()
-    {
-        return initialized;
-    }
-
-    /**
-     * Returns the REST API client.
-     * @return the REST API client 
-     */
-    public NewRelicApi getApiClient()
-    {
-        return apiClient;
+        super(apiKey, verbose);
     }
 
     /**
      * Returns the dashboards.
+     * @param detailed <CODE>true</CODE> if detailed info is required (including widgets) rather than a summary
      * @return The dashboards
      */
-    public List<Dashboard> getDashboards()
+    public List<Dashboard> getDashboards(boolean detailed)
     {
         checkInitialize();
         if(!isInitialized())
             throw new IllegalStateException("client not initialized");
 
         // Get the dashboards
-        logger.info("Getting the dashboards");
+        if(verbose())
+            logger.info("Getting the dashboards");
         Collection<Dashboard> dashboards = apiClient.dashboards().list();
-        logger.info("Got "+dashboards.size()+" dashboards");
+        if(verbose())
+            logger.info("Got "+dashboards.size()+" dashboards");
 
         List<Dashboard> ret = new ArrayList<Dashboard>();
-        ret.addAll(dashboards);
+        for(Dashboard dashboard : dashboards)
+        {
+            if(detailed)
+                dashboard = apiClient.dashboards().show(dashboard.getId()).get();
+            ret.add(dashboard);
+        }
         return ret;
     }
 
@@ -125,10 +98,12 @@ public class DashboardManager
 
         // Create the dashboards
         List<Dashboard> ret = new ArrayList<Dashboard>();
-        logger.info("Creating "+dashboards+" dashboards");
+        if(verbose())
+            logger.info("Creating "+dashboards.size()+" dashboards");
         for(Dashboard dashboard : dashboards)
         {
-            logger.info("Creating dashboard: "+dashboard.getTitle());
+            if(verbose())
+                logger.info("Creating dashboard: "+dashboard.getTitle());
             dashboard = apiClient.dashboards().create(dashboard).get();
             logger.info("Created dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
             ret.add(dashboard);
@@ -149,7 +124,8 @@ public class DashboardManager
             throw new IllegalStateException("client not initialized");
 
         // Create the dashboard
-        logger.info("Creating dashboard: "+dashboard.getTitle());
+        if(verbose())
+            logger.info("Creating dashboard: "+dashboard.getTitle());
         dashboard = apiClient.dashboards().create(dashboard).get();
         logger.info("Created dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
 
@@ -207,9 +183,58 @@ public class DashboardManager
         Collection<Dashboard> dashboards = apiClient.dashboards().list(title);
         for(Dashboard dashboard : dashboards)
         {
-            logger.info("Deleting dashboard: "+dashboard.getId());
+            if(verbose())
+                logger.info("Deleting dashboard: "+dashboard.getId());
             apiClient.dashboards().delete(dashboard.getId());
             logger.info("Deleted dashboard: "+dashboard.getId()+" - "+dashboard.getTitle());
+        }
+    }
+
+    /**
+     * Reads dashboards from an import file with the given name.
+     * Closes the reader after reading the file.
+     * @param filename The name of the file to import
+     * @param reader A reader for the file
+     * @return The set of dashboards read from the import file
+     */
+    public List<Dashboard> readDashboards(String filename, Reader reader)
+    {
+        List<Dashboard> ret = null;
+
+        try
+        {
+            if(verbose())
+                logger.info("Loading dashboard file: "+filename);
+            ret = DashboardParser.parseYaml(reader);
+            logger.info("Read "+ret.size()+" dashboards");
+        }
+        finally
+        {
+            closeReader(reader);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Writes dashboards to an export file with the given name.
+     * Closes the writer after writing the file.
+     * @param dashboards The list of dashboards to be exported
+     * @param filename The name of the file to export to
+     * @param writer A writer for the file
+     */
+    public void writeDashboards(List<Dashboard> dashboards, String filename, Writer writer)
+    {
+        try
+        {
+            if(verbose())
+                logger.info("Writing dashboard file: "+filename);
+            DashboardRenderer.builder().withBanner(true).title(filename).build().renderYaml(dashboards, writer);
+            logger.info("Wrote "+dashboards.size()+" dashboards");
+        }
+        finally
+        {
+            closeWriter(writer);
         }
     }
 }

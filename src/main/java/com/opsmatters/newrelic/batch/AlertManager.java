@@ -23,11 +23,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
-import com.opsmatters.core.documents.InputFileReader;
 import com.opsmatters.core.documents.OutputFileWriter;
 import com.opsmatters.core.documents.Workbook;
-import com.opsmatters.newrelic.api.NewRelicApi;
-import com.opsmatters.newrelic.api.NewRelicInfraApi;
 import com.opsmatters.newrelic.api.model.Entity;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicy;
 import com.opsmatters.newrelic.api.model.alerts.policies.AlertPolicyChannel;
@@ -89,14 +86,9 @@ import com.opsmatters.newrelic.batch.renderers.InfraHostNotReportingAlertConditi
  * 
  * @author Gerald Curley (opsmatters)
  */
-public class AlertManager
+public class AlertManager extends BaseManager
 {
     private static final Logger logger = Logger.getLogger(AlertManager.class.getName());
-
-    private String apiKey;
-    private NewRelicApi apiClient;
-    private NewRelicInfraApi infraApiClient;
-    private boolean initialized = false;
 
     /**
      * Constructor that takes an API key.
@@ -104,139 +96,17 @@ public class AlertManager
      */
     public AlertManager(String apiKey)
     {
-        this.apiKey = apiKey;
+        this(apiKey, false);
     }
 
     /**
-     * Initialise the clients.
+     * Constructor that takes an API key and a verbose flag.
+     * @param apiKey The API key used to authenticate the client
+     * @param verbose <CODE>true</CODE> if verbose logging is enabled
      */
-    private void checkInitialize()
+    public AlertManager(String apiKey, boolean verbose)
     {
-        if(!initialized)
-            initialize();
-        if(!initialized)
-            throw new IllegalStateException("client not initialized");
-    }
-
-    /**
-     * Called after setting configuration properties.
-     */
-    public void initialize()
-    {
-        if(apiKey == null)
-            throw new IllegalArgumentException("null API key");
-
-        initialized = false;
-
-        logger.info("Initialising the client");
-        apiClient = NewRelicApi.builder().apiKey(apiKey).build();
-        infraApiClient = NewRelicInfraApi.builder().apiKey(apiKey).build();
-        logger.info("Initialised the clients");
-
-        initialized = true;
-    }
-
-    /**
-     * Returns <CODE>true</CODE> if the clients have been initialized.
-     * @return <CODE>true</CODE> if the clients have been initialized
-     */
-    public boolean isInitialized()
-    {
-        return initialized;
-    }
-
-    /**
-     * Returns the REST API client.
-     * @return the REST API client 
-     */
-    public NewRelicApi getApiClient()
-    {
-        return apiClient;
-    }
-
-    /**
-     * Returns the Infrastructure API client.
-     * @return the Infrastructure API client 
-     */
-    public NewRelicInfraApi getInfraApiClient()
-    {
-        return infraApiClient;
-    }
-
-    /**
-     * Returns an input file reader for the given file stream.
-     * @param filename The name of the file to import
-     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to import
-     * @param stream An input stream for the file
-     * @return The input file reader
-     */
-    private InputFileReader getReader(String filename, String worksheet, InputStream stream)
-    {
-         return InputFileReader.builder()
-            .name(filename)
-            .worksheet(worksheet)
-            .withInputStream(stream)
-            .build();
-    }
-
-    /**
-     * Returns an output file writer for the given file stream.
-     * @param filename The name of the file to export to
-     * @param worksheet For XLS and XLSX files, the name of the worksheet in the file to export to
-     * @param workbook For XLS and XLSX files, the workbook to append the worksheet to
-     * @param stream An output stream for the file
-     * @return The input file reader
-     */
-    private OutputFileWriter getWriter(String filename, String worksheet, Workbook workbook, OutputStream stream)
-    {
-        return OutputFileWriter.builder()
-            .name(filename)
-            .worksheet(worksheet)
-            .withOutputStream(stream)
-            .withWorkbook(workbook)
-            .build();
-    }
-
-    /**
-     * Closes the given output writer.
-     * @param writer The output writer to close
-     */
-    private void closeWriter(OutputFileWriter writer)
-    {
-        if(writer != null)
-            writer.close();
-    }
-
-    /**
-     * Closes the given input stream.
-     * @param stream The input stream to close
-     */
-    private void closeStream(InputStream stream)
-    {
-        try
-        {
-            if(stream != null)
-                stream.close();
-        }
-        catch(IOException e)
-        {
-        }
-    }
-
-    /**
-     * Closes the given output stream.
-     * @param stream The output stream to close
-     */
-    private void closeStream(OutputStream stream)
-    {
-        try
-        {
-            if(stream != null)
-                stream.close();
-        }
-        catch(IOException e)
-        {
-        }
+        super(apiKey, verbose);
     }
 
     /**
@@ -248,9 +118,11 @@ public class AlertManager
         checkInitialize();
 
         // Get the alert policies
-        logger.info("Getting the alert policies");
+        if(verbose())
+            logger.info("Getting the alert policies");
         Collection<AlertPolicy> policies = apiClient.alertPolicies().list();
-        logger.info("Got "+policies.size()+" alert policies");
+        if(verbose())
+            logger.info("Got "+policies.size()+" alert policies");
         return toList(policies);
     }
 
@@ -268,7 +140,8 @@ public class AlertManager
 
         // Create the policies
         List<AlertPolicy> ret = new ArrayList<AlertPolicy>();
-        logger.info("Creating "+policies.size()+" alert policies");
+        if(verbose())
+            logger.info("Creating "+policies.size()+" alert policies");
         for(AlertPolicy policy : policies)
             ret.add(createAlertPolicy(policy));
 
@@ -286,7 +159,8 @@ public class AlertManager
 
         // Create the policy
         AlertPolicyChannel channels = policy.getChannels();
-        logger.info("Creating alert policy: "+policy.getName());
+        if(verbose())
+            logger.info("Creating alert policy: "+policy.getName());
         policy = apiClient.alertPolicies().create(policy).get();
         logger.info("Created alert policy: "+policy.getId()+" - "+policy.getName());
 
@@ -298,7 +172,8 @@ public class AlertManager
                 if(channelId != null)
                 {
                     apiClient.alertPolicyChannels().update(policy.getId(), channelId);
-                    logger.info("Added channel for alert policy: "+channelId);
+                    if(verbose())
+                        logger.info("Added channel for alert policy: "+channelId);
                 }
             }
         }
@@ -353,7 +228,8 @@ public class AlertManager
         Collection<AlertPolicy> policies = apiClient.alertPolicies().list(name);
         for(AlertPolicy policy : policies)
         {
-            logger.info("Deleting alert policy: "+policy.getId());
+            if(verbose())
+                logger.info("Deleting alert policy: "+policy.getId());
             apiClient.alertPolicies().delete(policy.getId());
             logger.info("Deleted alert policy : "+policy.getId()+" - "+policy.getName());
         }
@@ -377,7 +253,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = AlertPolicyParser.parse(channels, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" alert policies");
         }
@@ -408,7 +285,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing alert policy file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             AlertPolicyRenderer.write(channels, policies, writer);
             logger.info("Wrote "+policies.size()+" alert policies");
@@ -429,9 +307,11 @@ public class AlertManager
         checkInitialize();
 
         // Get the alert channels
-        logger.info("Getting the alert channels");
+        if(verbose())
+            logger.info("Getting the alert channels");
         Collection<AlertChannel> channels = apiClient.alertChannels().list();
-        logger.info("Got "+channels.size()+" alert channels");
+        if(verbose())
+            logger.info("Got "+channels.size()+" alert channels");
         return toList(channels);
     }
 
@@ -449,7 +329,8 @@ public class AlertManager
 
         // Create the channels
         List<AlertChannel> ret = new ArrayList<AlertChannel>();
-        logger.info("Creating "+channels.size()+" alert channels");
+        if(verbose())
+            logger.info("Creating "+channels.size()+" alert channels");
         for(AlertChannel channel : channels)
             ret.add(createAlertChannel(channel));
 
@@ -466,7 +347,8 @@ public class AlertManager
         checkInitialize();
 
         // Create the channel
-        logger.info("Creating alert channel: "+channel.getName());
+        if(verbose())
+            logger.info("Creating alert channel: "+channel.getName());
         channel = apiClient.alertChannels().create(channel).get();
         logger.info("Created alert channel: "+channel.getId()+" - "+channel.getName());
 
@@ -520,7 +402,8 @@ public class AlertManager
         Collection<AlertChannel> channels = apiClient.alertChannels().list(name);
         for(AlertChannel channel : channels)
         {
-            logger.info("Deleting alert channel: "+channel.getId());
+            if(verbose())
+                logger.info("Deleting alert channel: "+channel.getId());
             apiClient.alertChannels().delete(channel.getId());
             logger.info("Deleted alert channel : "+channel.getId()+" - "+channel.getName());
         }
@@ -542,7 +425,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading email alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading email alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = EmailChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" email alert channels");
         }
@@ -572,7 +456,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing email alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing email alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             EmailChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" email alert channels");
@@ -600,7 +485,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading Slack alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading Slack alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = SlackChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" Slack alert channels");
         }
@@ -630,7 +516,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing Slack alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing Slack alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             SlackChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" Slack alert channels");
@@ -658,7 +545,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading HipChat alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading HipChat alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = HipChatChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" HipChat alert channels");
         }
@@ -688,7 +576,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing HipChat alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing HipChat alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             HipChatChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" HipChat alert channels");
@@ -716,7 +605,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading Campfire alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading Campfire alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = CampfireChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" Campfire alert channels");
         }
@@ -746,7 +636,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing Campfire alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing Campfire alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             CampfireChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" Campfire alert channels");
@@ -774,7 +665,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading OpsGenie alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading OpsGenie alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = OpsGenieChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" OpsGenie alert channels");
         }
@@ -804,7 +696,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing OpsGenie alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing OpsGenie alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             OpsGenieChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" OpsGenie alert channels");
@@ -832,7 +725,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading PagerDuty alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading PagerDuty alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = PagerDutyChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" PagerDuty alert channels");
         }
@@ -862,7 +756,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing PagerDuty alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing PagerDuty alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             PagerDutyChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" PagerDuty alert channels");
@@ -890,7 +785,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading VictorOps alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading VictorOps alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = VictorOpsChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" VictorOps alert channels");
         }
@@ -920,7 +816,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing VictorOps alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing VictorOps alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             VictorOpsChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" VictorOps alert channels");
@@ -948,7 +845,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading User alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading User alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = UserChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" User alert channels");
         }
@@ -978,7 +876,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing User alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing User alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             UserChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" User alert channels");
@@ -1006,7 +905,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading xMatters alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading xMatters alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = xMattersChannelParser.parse(getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" xMatters alert channels");
         }
@@ -1036,7 +936,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing xMatters alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing xMatters alert channel file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             xMattersChannelRenderer.write(channels, writer);
             logger.info("Wrote "+channels.size()+" xMatters alert channels");
@@ -1072,9 +973,11 @@ public class AlertManager
         for(AlertPolicy policy : policies)
         {
             // Get the alert conditions
-            logger.info("Getting the alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Getting the alert conditions for policy: "+policy.getId());
             Collection<AlertCondition> conditions = apiClient.alertConditions().list(policy.getId());
-            logger.info("Got "+conditions.size()+" alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Got "+conditions.size()+" alert conditions for policy: "+policy.getId());
 
             // Set the policyId and add the condition to the list
             for(AlertCondition condition : conditions)
@@ -1101,7 +1004,8 @@ public class AlertManager
 
         // Create the conditions
         List<AlertCondition> ret = new ArrayList<AlertCondition>();
-        logger.info("Creating "+conditions.size()+" alert conditions");
+        if(verbose())
+            logger.info("Creating "+conditions.size()+" alert conditions");
         for(AlertCondition condition : conditions)
             ret.add(createAlertCondition(condition));
 
@@ -1118,7 +1022,8 @@ public class AlertManager
         checkInitialize();
 
         // Create the condition
-        logger.info("Creating alert condition: "+condition.getName());
+        if(verbose())
+            logger.info("Creating alert condition: "+condition.getName());
         checkPolicyId(condition);
         condition = apiClient.alertConditions().create(condition.getPolicyId(), condition).get();
         logger.info("Created alert condition: "+condition.getId()+" - "+condition.getName());
@@ -1176,7 +1081,8 @@ public class AlertManager
         Collection<AlertCondition> conditions = apiClient.alertConditions().list(policyId, name);
         for(AlertCondition condition : conditions)
         {
-            logger.info("Deleting alert condition: "+condition.getId());
+            if(verbose())
+                logger.info("Deleting alert condition: "+condition.getId());
             apiClient.alertConditions().delete(condition.getId());
             logger.info("Deleted alert condition : "+condition.getId()+" - "+condition.getName());
         }
@@ -1201,7 +1107,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = AlertConditionParser.parse(policies, entities, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" alert conditions");
         }
@@ -1233,7 +1140,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             AlertConditionRenderer.write(policies, entities, conditions, writer);
             logger.info("Wrote "+conditions.size()+" alert conditions");
@@ -1258,9 +1166,11 @@ public class AlertManager
         for(AlertPolicy policy : policies)
         {
             // Get the alert conditions
-            logger.info("Getting the external service alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Getting the external service alert conditions for policy: "+policy.getId());
             Collection<ExternalServiceAlertCondition> conditions = apiClient.externalServiceAlertConditions().list(policy.getId());
-            logger.info("Got "+conditions.size()+" external service alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Got "+conditions.size()+" external service alert conditions for policy: "+policy.getId());
 
             // Set the policyId and add the condition to the list
             for(ExternalServiceAlertCondition condition : conditions)
@@ -1287,7 +1197,8 @@ public class AlertManager
 
         // Create the conditions
         List<ExternalServiceAlertCondition> ret = new ArrayList<ExternalServiceAlertCondition>();
-        logger.info("Creating "+conditions.size()+" external service alert conditions");
+        if(verbose())
+            logger.info("Creating "+conditions.size()+" external service alert conditions");
         for(ExternalServiceAlertCondition condition : conditions)
             ret.add(createExternalServiceAlertCondition(condition));
 
@@ -1304,7 +1215,8 @@ public class AlertManager
         checkInitialize();
 
         // Create the condition
-        logger.info("Creating external service alert condition: "+condition.getName());
+        if(verbose())
+            logger.info("Creating external service alert condition: "+condition.getName());
         checkPolicyId(condition);
         condition = apiClient.externalServiceAlertConditions().create(condition.getPolicyId(), condition).get();
         logger.info("Created external service alert condition: "+condition.getId()+" - "+condition.getName());
@@ -1362,7 +1274,8 @@ public class AlertManager
         Collection<ExternalServiceAlertCondition> conditions = apiClient.externalServiceAlertConditions().list(policyId, name);
         for(ExternalServiceAlertCondition condition : conditions)
         {
-            logger.info("Deleting external service alert condition: "+condition.getId());
+            if(verbose())
+                logger.info("Deleting external service alert condition: "+condition.getId());
             apiClient.externalServiceAlertConditions().delete(condition.getId());
             logger.info("Deleted external service alert condition : "+condition.getId()+" - "+condition.getName());
         }
@@ -1387,7 +1300,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading external service alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading external service alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = ExternalServiceAlertConditionParser.parse(policies, entities, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" external service alert conditions");
         }
@@ -1419,7 +1333,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing external service alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing external service alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             ExternalServiceAlertConditionRenderer.write(policies, entities, conditions, writer);
             logger.info("Wrote "+conditions.size()+" external service alert conditions");
@@ -1444,9 +1359,11 @@ public class AlertManager
         for(AlertPolicy policy : policies)
         {
             // Get the alert conditions
-            logger.info("Getting the NRQL alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Getting the NRQL alert conditions for policy: "+policy.getId());
             Collection<NrqlAlertCondition> conditions = apiClient.nrqlAlertConditions().list(policy.getId());
-            logger.info("Got "+conditions.size()+" NRQL alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Got "+conditions.size()+" NRQL alert conditions for policy: "+policy.getId());
 
             // Set the policyId and add the condition to the list
             for(NrqlAlertCondition condition : conditions)
@@ -1473,7 +1390,8 @@ public class AlertManager
 
         // Create the conditions
         List<NrqlAlertCondition> ret = new ArrayList<NrqlAlertCondition>();
-        logger.info("Creating "+conditions.size()+" NRQL alert conditions");
+        if(verbose())
+            logger.info("Creating "+conditions.size()+" NRQL alert conditions");
         for(NrqlAlertCondition condition : conditions)
             ret.add(createNrqlAlertCondition(condition));
 
@@ -1490,7 +1408,8 @@ public class AlertManager
         checkInitialize();
 
         // Create the condition
-        logger.info("Creating NRQL alert condition: "+condition.getName());
+        if(verbose())
+            logger.info("Creating NRQL alert condition: "+condition.getName());
         checkPolicyId(condition);
         condition = apiClient.nrqlAlertConditions().create(condition.getPolicyId(), condition).get();
         logger.info("Created NRQL alert condition: "+condition.getId()+" - "+condition.getName());
@@ -1548,7 +1467,8 @@ public class AlertManager
         Collection<NrqlAlertCondition> conditions = apiClient.nrqlAlertConditions().list(policyId, name);
         for(NrqlAlertCondition condition : conditions)
         {
-            logger.info("Deleting NRQL alert condition: "+condition.getId());
+            if(verbose())
+                logger.info("Deleting NRQL alert condition: "+condition.getId());
             apiClient.nrqlAlertConditions().delete(condition.getId());
             logger.info("Deleted i alert condition : "+condition.getId()+" - "+condition.getName());
         }
@@ -1572,7 +1492,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading NRQL alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading NRQL alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = NrqlAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" NRQL alert conditions");
         }
@@ -1603,7 +1524,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing NRQL alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing NRQL alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             NrqlAlertConditionRenderer.write(policies, conditions, writer);
             logger.info("Wrote "+conditions.size()+" NRQL alert conditions");
@@ -1628,9 +1550,11 @@ public class AlertManager
         for(AlertPolicy policy : policies)
         {
             // Get the alert conditions
-            logger.info("Getting the infra metric alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Getting the infra metric alert conditions for policy: "+policy.getId());
             Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policy.getId());
-            logger.info("Got "+conditions.size()+" infra metric alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Got "+conditions.size()+" infra metric alert conditions for policy: "+policy.getId());
 
             // Add the condition to the list
             for(InfraAlertCondition condition : conditions)
@@ -1656,9 +1580,11 @@ public class AlertManager
         for(AlertPolicy policy : policies)
         {
             // Get the alert conditions
-            logger.info("Getting the infra process alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Getting the infra process alert conditions for policy: "+policy.getId());
             Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policy.getId());
-            logger.info("Got "+conditions.size()+" infra process alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Got "+conditions.size()+" infra process alert conditions for policy: "+policy.getId());
 
             // Add the condition to the list
             for(InfraAlertCondition condition : conditions)
@@ -1684,9 +1610,11 @@ public class AlertManager
         for(AlertPolicy policy : policies)
         {
             // Get the alert conditions
-            logger.info("Getting the infra host alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Getting the infra host alert conditions for policy: "+policy.getId());
             Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policy.getId());
-            logger.info("Got "+conditions.size()+" infra host alert conditions for policy: "+policy.getId());
+            if(verbose())
+                logger.info("Got "+conditions.size()+" infra host alert conditions for policy: "+policy.getId());
 
             // Add the condition to the list
             for(InfraAlertCondition condition : conditions)
@@ -1713,7 +1641,8 @@ public class AlertManager
 
         // Create the conditions
         List<InfraAlertCondition> ret = new ArrayList<InfraAlertCondition>();
-        logger.info("Creating "+conditions.size()+" infra alert conditions");
+        if(verbose())
+            logger.info("Creating "+conditions.size()+" infra alert conditions");
         for(InfraAlertCondition condition : conditions)
             ret.add(createInfraAlertCondition(condition));
 
@@ -1730,7 +1659,8 @@ public class AlertManager
         checkInitialize();
 
         // Create the condition
-        logger.info("Creating infra alert condition: "+condition.getName());
+        if(verbose())
+            logger.info("Creating infra alert condition: "+condition.getName());
         checkPolicyId(condition);
         condition = infraApiClient.infraAlertConditions().create(condition).get();
         logger.info("Created infra alert condition: "+condition.getId()+" - "+condition.getName());
@@ -1788,7 +1718,8 @@ public class AlertManager
         Collection<InfraAlertCondition> conditions = infraApiClient.infraAlertConditions().list(policyId, name);
         for(InfraAlertCondition condition : conditions)
         {
-            logger.info("Deleting infra alert condition: "+condition.getId());
+            if(verbose())
+                logger.info("Deleting infra alert condition: "+condition.getId());
             infraApiClient.infraAlertConditions().delete(condition.getId());
             logger.info("Deleted infra alert condition : "+condition.getId()+" - "+condition.getName());
         }
@@ -1812,7 +1743,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading infra metric alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading infra metric alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = InfraMetricAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" infra metric alert conditions");
         }
@@ -1843,7 +1775,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing infra metric alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing infra metric alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             InfraMetricAlertConditionRenderer.write(policies, conditions, writer);
             logger.info("Wrote "+conditions.size()+" infra metric alert conditions");
@@ -1873,7 +1806,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading infra process alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading infra process alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = InfraProcessRunningAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" infra process alert conditions");
         }
@@ -1904,7 +1838,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing infra process alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing infra process alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             InfraProcessRunningAlertConditionRenderer.write(policies, conditions, writer);
             logger.info("Wrote "+conditions.size()+" infra process alert conditions");
@@ -1934,7 +1869,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Loading infra host alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Loading infra host alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             ret = InfraHostNotReportingAlertConditionParser.parse(policies, getReader(filename, worksheet, stream));
             logger.info("Read "+ret.size()+" infra host alert conditions");
         }
@@ -1965,7 +1901,8 @@ public class AlertManager
 
         try
         {
-            logger.info("Writing infra host alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
+            if(verbose())
+                logger.info("Writing infra host alert condition file: "+filename+(worksheet != null ? "/"+worksheet : ""));
             writer = getWriter(filename, worksheet, workbook, stream);
             InfraHostNotReportingAlertConditionRenderer.write(policies, conditions, writer);
             logger.info("Wrote "+conditions.size()+" infra host alert conditions");
@@ -1986,9 +1923,11 @@ public class AlertManager
         checkInitialize();
 
         // Get the applications
-        logger.info("Getting the applications");
+        if(verbose())
+            logger.info("Getting the applications");
         Collection<Application> applications = apiClient.applications().list();
-        logger.info("Got "+applications.size()+" applications");
+        if(verbose())
+            logger.info("Got "+applications.size()+" applications");
         return toList(applications);
    }
 
@@ -2001,22 +1940,11 @@ public class AlertManager
         checkInitialize();
 
         // Get the servers
-        logger.info("Getting the servers");
+        if(verbose())
+            logger.info("Getting the servers");
         Collection<Server> servers = apiClient.servers().list();
-        logger.info("Got "+servers.size()+" servers");
+        if(verbose())
+            logger.info("Got "+servers.size()+" servers");
         return toList(servers);
-    }
-
-    /**
-     * Converts the given collection to a list.
-     * @param <T> The type of the collection
-     * @param collection The collection
-     * @return The list
-     */
-    public <T> List<T> toList(Collection<T> collection)
-    {
-        List<T> ret = new ArrayList<T>();
-        ret.addAll(collection);
-        return ret;
     }
 }

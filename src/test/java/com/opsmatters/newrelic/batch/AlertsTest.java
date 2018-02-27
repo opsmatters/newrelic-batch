@@ -95,7 +95,7 @@ public class AlertsTest
         logger.info("Starting test: "+testName);
 
         AlertConfiguration config = new AlertConfiguration();
-        AlertManager manager = new AlertManager(apiKey);
+        AlertManager manager = new AlertManager(apiKey, true);
 
         try
         {
