@@ -30,7 +30,7 @@
     <url>https://github.com/opsmatters/newrelic-batch</url>
     <connection>scm:git:https://github.com/opsmatters/newrelic-batch.git</connection>
     <developerConnection>scm:git:https://github.com/opsmatters/newrelic-batch.git</developerConnection>
-    <tag>newrelic-batch-1.0.0</tag>
+    <tag>newrelic-batch-1.0.1</tag>
   </scm>
 
   <developers>
@@ -263,6 +263,12 @@ built.on=${TODAY}
   <groupId>com.opsmatters</groupId>
   <artifactId>opsmatters-core</artifactId>
   <version>1.0.1</version>
+</dependency>
+
+<dependency>
+    <groupId>com.opsmatters</groupId>
+    <artifactId>newrelic-api</artifactId>
+    <version>1.0.10</version>
 </dependency>
 
 <dependency>
